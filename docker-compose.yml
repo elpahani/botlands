@@ -1,0 +1,41 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: botlands-backend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    volumes:
+      - ${WORKSPACE_PATH:-./data}:/app/workspace
+      - ./data:/app/data
+    environment:
+      - DATA_DIR=/app/data
+      - WORKSPACE_DIR=/app/workspace
+      - NODE_ENV=production
+      - OLLAMA_HOST=${OLLAMA_HOST:-http://ollama:11434}
+    networks:
+      - botlands
+      - inference
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: botlands-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:3001/api
+    depends_on:
+      - backend
+    networks:
+      - botlands
+
+networks:
+  botlands:
+    name: botlands
+    driver: bridge
+  inference:
+    name: inference
+    external: true
