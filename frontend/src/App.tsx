@@ -157,7 +157,7 @@ function App() {
 
     return (
         <ThemeProvider>
-        <div className="flex flex-col h-screen bg-[#1e1e1e] font-sans text-slate-300 overflow-hidden selection:bg-[#264f78]">
+        <div className="botlands-app flex flex-col h-screen bg-[#1e1e1e] font-sans text-slate-300 overflow-hidden selection:bg-[#264f78]">
             {/* Top Navigation Tabs (IDE Style) */}
             <div className="h-9 flex items-end shrink-0 z-20 select-none overflow-x-auto no-scrollbar font-sans bg-[#181818] border-b border-[#2d2d2d]">
                 <button 
