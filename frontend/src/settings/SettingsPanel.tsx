@@ -81,7 +81,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
                       style={{
                         background:
                           presetData?.tokens.colors?.gradientPrimary ||
-                          'linear-gradient(135deg, #667eea, #764ba2)',
+                          'linear-gradient(135deg, var(--color-accent-primary), var(--color-accent-secondary))',
                       }}
                     />
 

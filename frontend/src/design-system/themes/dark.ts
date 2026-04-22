@@ -28,7 +28,7 @@ export const darkTheme: TokenSet = {
     borderMedium: 'rgba(255, 255, 255, 0.1)',
     borderFocus: '#667eea',
     
-    gradientPrimary: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    gradientPrimary: 'linear-gradient(135deg, var(--color-accent-primary) 0%, var(--color-accent-secondary) 100%)',
     gradientHero: 'linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%)',
   },
   

@@ -164,7 +164,7 @@ function App() {
                     onClick={() => setActiveTab('docland')}
                     className={`h-[35px] px-3 text-[13px] flex items-center gap-2 min-w-[150px] max-w-[200px] transition-none group cursor-pointer border-r border-border-medium ${
                         activeTab === 'docland' 
-                            ? 'border-t border-t-[#007fd4] bg-bg-primary text-text-inverse border-b border-b-transparent translate-y-[1px]' 
+                            ? 'border-t border-t-accent-primary bg-bg-primary text-text-inverse border-b border-b-transparent translate-y-[1px]' 
                             : 'border-t border-t-transparent bg-bg-elevated text-text-secondary hover:bg-bg-tertiary hover:text-text-primary border-b border-b-transparent'
                     }`}
                 >
@@ -178,7 +178,7 @@ function App() {
                     onClick={() => setActiveTab('timeland')}
                     className={`h-[35px] px-3 text-[13px] flex items-center gap-2 min-w-[150px] max-w-[200px] transition-none group cursor-pointer border-r border-border-medium ${
                         activeTab === 'timeland' 
-                            ? 'border-t border-t-[#007fd4] bg-bg-primary text-text-inverse border-b border-b-transparent translate-y-[1px]' 
+                            ? 'border-t border-t-accent-primary bg-bg-primary text-text-inverse border-b border-b-transparent translate-y-[1px]' 
                             : 'border-t border-t-transparent bg-bg-elevated text-text-secondary hover:bg-bg-tertiary hover:text-text-primary border-b border-b-transparent'
                     }`}
                 >
