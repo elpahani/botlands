@@ -4,11 +4,6 @@ import { darkTheme } from './themes/dark';
 import { defaultPresets, getPresetById } from './themes/presets';
 import type { ThemePreset } from './themes/presets';
 
-/**
- * Theme Context for Botlands
- * Provides current theme tokens and theme switching
- */
-
 interface ThemeContextType {
   currentTheme: TokenSet;
   currentPresetId: string;
@@ -47,43 +42,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setCurrentPresetId('custom');
   }, []);
 
-  // Apply CSS variables on theme change
+  // Apply theme by setting data-theme attribute on html element
   useEffect(() => {
-    const root = document.documentElement;
-    const { colors, spacing, typography, radius, shadows, transitions } = currentTheme;
-    
-    // Colors
-    Object.entries(colors).forEach(([key, value]) => {
-      root.style.setProperty(`--color-${key}`, value);
-    });
-    
-    // Spacing
-    Object.entries(spacing).forEach(([key, value]) => {
-      root.style.setProperty(`--spacing-${key}`, value);
-    });
-    
-    // Typography
-    root.style.setProperty('--font-family', typography.fontFamily);
-    root.style.setProperty('--font-mono', typography.fontMono);
-    Object.entries(typography.sizes).forEach(([key, value]) => {
-      root.style.setProperty(`--font-size-${key}`, value);
-    });
-    
-    // Radius
-    Object.entries(radius).forEach(([key, value]) => {
-      root.style.setProperty(`--radius-${key}`, value);
-    });
-    
-    // Shadows
-    Object.entries(shadows).forEach(([key, value]) => {
-      root.style.setProperty(`--shadow-${key}`, value);
-    });
-    
-    // Transitions
-    Object.entries(transitions).forEach(([key, value]) => {
-      root.style.setProperty(`--transition-${key}`, value);
-    });
-  }, [currentTheme]);
+    document.documentElement.setAttribute('data-theme', currentPresetId);
+  }, [currentPresetId]);
 
   const isDark = ['dark', 'midnight', 'minimal', 'neon'].includes(currentPresetId);
 
