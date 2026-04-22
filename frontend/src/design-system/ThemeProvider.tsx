@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { TokenSet } from './tokens';
+import type { TokenSet } from './tokens';
 import { darkTheme } from './themes/dark';
-import { defaultPresets, ThemePreset, getPresetById } from './themes/presets';
+import { defaultPresets, getPresetById } from './themes/presets';
+import type { ThemePreset } from './themes/presets';
 
 /**
  * Theme Context for Botlands

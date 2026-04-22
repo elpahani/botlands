@@ -1,4 +1,4 @@
-import { TokenSet } from '../tokens';
+import type { TokenSet } from '../tokens';
 
 /**
  * Dark Theme — Default for Botlands

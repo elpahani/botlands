@@ -1,4 +1,4 @@
-import { TokenSet } from '../tokens';
+import type { TokenSet } from '../tokens';
 import { darkTheme } from './dark';
 import { lightTheme } from './light';
 

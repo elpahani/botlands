@@ -1,4 +1,4 @@
-import { TokenSet } from '../tokens';
+import type { TokenSet } from '../tokens';
 
 /**
  * Light Theme for Botlands
