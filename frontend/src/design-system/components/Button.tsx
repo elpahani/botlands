@@ -1,9 +1,8 @@
 import React from 'react';
-import { useTheme } from '../ThemeProvider';
 
 /**
  * Button Component
- * Uses CSS variables from theme system
+ * Pure Tailwind — uses CSS variables via @theme, no JS theme logic
  */
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
@@ -17,57 +16,27 @@ export const Button: React.FC<ButtonProps> = ({
   className = '',
   ...props
 }) => {
-  const { currentTheme } = useTheme();
-  const { colors } = currentTheme;
-
-  const baseStyles: React.CSSProperties = {
-    borderRadius: 'var(--radius-md)',
-    fontWeight: 600,
-    cursor: 'pointer',
-    transition: 'var(--transition-fast)',
-    border: 'none',
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 'var(--spacing-sm)',
-    fontFamily: 'var(--font-family)',
+  // Base styles — all via Tailwind classes using CSS variables
+  const baseClasses = 'inline-flex items-center justify-center gap-2 font-semibold cursor-pointer transition-fast border-none';
+  
+  // Size variants
+  const sizeClasses = {
+    sm: 'px-3 py-1.5 text-sm rounded-md',
+    md: 'px-5 py-2.5 text-base rounded-lg',
+    lg: 'px-7 py-3.5 text-lg rounded-xl',
   };
-
-  const sizeStyles: Record<string, React.CSSProperties> = {
-    sm: { padding: '6px 12px', fontSize: 'var(--font-size-sm)' },
-    md: { padding: '10px 20px', fontSize: 'var(--font-size-base)' },
-    lg: { padding: '14px 28px', fontSize: 'var(--font-size-lg)' },
-  };
-
-  const variantStyles: Record<string, React.CSSProperties> = {
-    primary: {
-      background: colors.gradientPrimary,
-      color: colors.textInverse,
-      boxShadow: 'var(--shadow-md)',
-    },
-    secondary: {
-      background: colors.bgElevated,
-      color: colors.textPrimary,
-      border: `1px solid ${colors.borderMedium}`,
-    },
-    ghost: {
-      background: 'transparent',
-      color: colors.textSecondary,
-    },
-    danger: {
-      background: colors.accentDanger,
-      color: colors.textInverse,
-    },
+  
+  // Color variants — all use CSS variables from @theme
+  const variantClasses = {
+    primary: 'bg-accent-primary text-text-inverse shadow-md hover:brightness-110 active:brightness-90',
+    secondary: 'bg-bg-elevated text-text-primary border border-border-medium hover:bg-bg-tertiary active:bg-bg-elevated',
+    ghost: 'bg-transparent text-text-secondary hover:bg-bg-elevated hover:text-text-primary active:bg-bg-tertiary',
+    danger: 'bg-accent-danger text-text-inverse shadow-md hover:brightness-110 active:brightness-90',
   };
 
   return (
     <button
-      style={{
-        ...baseStyles,
-        ...sizeStyles[size],
-        ...variantStyles[variant],
-      }}
-      className={`botlands-button ${className}`}
+      className={`${baseClasses} ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
       {...props}
     >
       {children}
