@@ -1,5 +1,7 @@
-import { Folder as FolderIcon, Inbox, Database, Plus, ChevronRight, ChevronDown, MoreVertical } from 'lucide-react';
+import { useState } from 'react';
+import { Folder as FolderIcon, Inbox, Database, Plus, ChevronRight, ChevronDown, MoreVertical, Settings } from 'lucide-react';
 import type { Folder } from '../../types/index.js';
+import { SettingsPanel } from '../../settings/SettingsPanel.js';
 
 interface SidebarProps {
     folders: Folder[];
@@ -28,6 +30,8 @@ export function Sidebar({
     handleCreateFolder,
     handleContextMenu
 }: SidebarProps) {
+    const [showSettings, setShowSettings] = useState(false);
+
     const toggleFolder = (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
         setExpandedFolders(prev => ({ ...prev, [id]: !prev[id] }));
@@ -134,6 +138,32 @@ export function Sidebar({
                     </div>
                 </div>
             </div>
+
+            {/* Settings Button - Bottom of Sidebar */}
+            <div className="px-3 py-2 border-t border-slate-200 bg-white">
+                <button 
+                    onClick={() => setShowSettings(true)}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
+                >
+                    <Settings className="w-4 h-4" />
+                    <span className="font-medium">Settings</span>
+                </button>
+            </div>
+
+            {/* Settings Modal */}
+            {showSettings && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowSettings(false)}>
+                    <div className="relative" onClick={e => e.stopPropagation()}>
+                        <SettingsPanel />
+                        <button 
+                            onClick={() => setShowSettings(false)}
+                            className="absolute top-4 right-4 text-white/50 hover:text-white text-xl"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

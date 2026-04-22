@@ -9,6 +9,7 @@ import { Sidebar } from './components/layout/Sidebar.js';
 import { ToolsPanel } from './components/tools/ToolsPanel.js';
 import { DocumentViewerModal } from './components/preview/DocumentViewerModal.js';
 import { TimelandTab } from './components/timeland/TimelandTab.js';
+import { ThemeProvider } from './design-system/ThemeProvider.js';
 
 const getFileCategory = (ext: string) => {
     const e = ext.toLowerCase();
@@ -155,6 +156,7 @@ function App() {
     const selectedRevision = selectedDoc?.revisions.find(r => r.id === selectedDoc.currentRevisionId);
 
     return (
+        <ThemeProvider>
         <div className="flex flex-col h-screen bg-[#1e1e1e] font-sans text-slate-300 overflow-hidden selection:bg-[#264f78]">
             {/* Top Navigation Tabs (IDE Style) */}
             <div className="h-9 flex items-end shrink-0 z-20 select-none overflow-x-auto no-scrollbar font-sans bg-[#181818] border-b border-[#2d2d2d]">
@@ -422,6 +424,7 @@ function App() {
                 )}
             </div>
         </div>
+        </ThemeProvider>
     );
 }
 
