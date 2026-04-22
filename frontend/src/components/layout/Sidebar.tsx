@@ -154,7 +154,7 @@ export function Sidebar({
             {showSettings && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowSettings(false)}>
                     <div className="relative" onClick={e => e.stopPropagation()}>
-                        <SettingsPanel />
+                        <SettingsPanel onClose={() => setShowSettings(false)} />
                         <button 
                             onClick={() => setShowSettings(false)}
                             className="absolute top-4 right-4 text-text-inverse/50 hover:text-text-inverse text-xl"
