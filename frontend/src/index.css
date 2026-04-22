@@ -200,6 +200,31 @@
   --theme-border-medium: rgba(255, 255, 255, 0.2);
 }
 
+/* Density classes */
+[data-density="compact"] .density-p {
+  padding: calc(16px * 0.5) calc(24px * 0.5);
+}
+
+[data-density="compact"] .density-gap {
+  gap: calc(16px * 0.5);
+}
+
+[data-density="normal"] .density-p {
+  padding: 16px 24px;
+}
+
+[data-density="normal"] .density-gap {
+  gap: 16px;
+}
+
+[data-density="comfortable"] .density-p {
+  padding: calc(16px * 1.5) calc(24px * 1.5);
+}
+
+[data-density="comfortable"] .density-gap {
+  gap: calc(16px * 1.5);
+}
+
 /* ============================================
    GLOBAL STYLES
    ============================================ */

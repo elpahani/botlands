@@ -129,6 +129,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     document.documentElement.setAttribute('data-theme', currentPresetId);
   }, [currentPresetId]);
 
+  // Apply density attribute
+  useEffect(() => {
+    document.documentElement.setAttribute('data-density', spacing.density);
+  }, [spacing.density]);
+
   // Apply color tokens as CSS variables (overrides data-theme presets)
   useEffect(() => {
     const root = document.documentElement;

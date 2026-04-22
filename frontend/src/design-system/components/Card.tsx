@@ -1,5 +1,4 @@
 import React from 'react';
-import { useTheme } from '../ThemeProvider';
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   elevation?: 'none' | 'sm' | 'md' | 'lg';
@@ -13,36 +12,23 @@ export const Card: React.FC<CardProps> = ({
   className = '',
   ...props
 }) => {
-  const { currentTheme } = useTheme();
-  const { colors } = currentTheme;
-
-  const elevationStyles: Record<string, React.CSSProperties> = {
-    none: { boxShadow: 'none' },
-    sm: { boxShadow: 'var(--shadow-sm)' },
-    md: { boxShadow: 'var(--shadow-md)' },
-    lg: { boxShadow: 'var(--shadow-lg)' },
-  };
-
-  const baseStyles: React.CSSProperties = {
-    background: colors.bgSecondary,
-    borderRadius: 'var(--radius-lg)',
-    border: `1px solid ${colors.borderLight}`,
-    padding: 'var(--spacing-lg)',
-    transition: 'var(--transition-fast)',
-  };
-
-  const hoverStyles: React.CSSProperties = hover ? {
-    cursor: 'pointer',
-  } : {};
-
   return (
     <div
-      style={{
-        ...baseStyles,
-        ...elevationStyles[elevation],
-        ...hoverStyles,
-      }}
-      className={`botlands-card ${hover ? 'botlands-card-hover' : ''} ${className}`}
+      className={`
+        bg-bg-secondary
+        rounded-lg
+        border border-border-light
+        p-6
+        transition-fast
+        ${
+          elevation === 'none' ? '' :
+          elevation === 'sm' ? 'shadow-sm' :
+          elevation === 'md' ? 'shadow-md' :
+          elevation === 'lg' ? 'shadow-lg' : 'shadow-md'
+        }
+        ${hover ? 'cursor-pointer hover:border-accent-primary/30' : ''}
+        ${className}
+      `}
       {...props}
     >
       {children}
