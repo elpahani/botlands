@@ -160,10 +160,10 @@ function App() {
         <div 
             className="botlands-app flex flex-col h-screen bg-bg-primary font-sans text-text-primary overflow-hidden selection:bg-accent-secondary"
             style={{
-                fontFamily: 'var(--font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif)',
-                fontSize: 'var(--font-size-base, 16px)',
-                fontWeight: 'var(--font-weight, 400)',
-                lineHeight: 'var(--line-height, 1.5)',
+                fontFamily: 'var(--theme-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif)',
+                fontSize: 'var(--theme-font-size, 16px)',
+                fontWeight: 'var(--theme-font-weight, 400)',
+                lineHeight: 'var(--theme-line-height, 1.5)',
             }}
         >
             {/* Top Navigation Tabs (IDE Style) */}

@@ -129,14 +129,26 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     document.documentElement.setAttribute('data-theme', currentPresetId);
   }, [currentPresetId]);
 
+  // Apply color tokens as CSS variables (overrides data-theme presets)
+  useEffect(() => {
+    const root = document.documentElement;
+    const colors = currentTheme.colors;
+    
+    // Convert camelCase to kebab-case and set as CSS variables with --theme- prefix
+    Object.entries(colors).forEach(([key, value]) => {
+      const cssVar = `--theme-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
+      root.style.setProperty(cssVar, value);
+    });
+  }, [currentTheme]);
+
   // Apply typography CSS variables
   useEffect(() => {
     const root = document.documentElement;
-    root.style.setProperty('--font-family', typography.fontFamily);
-    root.style.setProperty('--font-mono', typography.fontMono);
-    root.style.setProperty('--font-size-base', `${typography.fontSizeBase}px`);
-    root.style.setProperty('--font-weight', String(typography.fontWeight));
-    root.style.setProperty('--line-height', String(typography.lineHeight));
+    root.style.setProperty('--theme-font-family', typography.fontFamily);
+    root.style.setProperty('--theme-font-mono', typography.fontMono);
+    root.style.setProperty('--theme-font-size', `${typography.fontSizeBase}px`);
+    root.style.setProperty('--theme-font-weight', String(typography.fontWeight));
+    root.style.setProperty('--theme-line-height', String(typography.lineHeight));
   }, [typography]);
 
   // Apply spacing CSS variables
@@ -147,8 +159,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       normal: '1',
       comfortable: '1.25',
     };
-    root.style.setProperty('--density-multiplier', densityMap[spacing.density]);
-    root.style.setProperty('--sidebar-width', `${spacing.sidebarWidth}px`);
+    root.style.setProperty('--theme-density', densityMap[spacing.density]);
+    root.style.setProperty('--theme-sidebar-width', `${spacing.sidebarWidth}px`);
     
     const radiusMap = {
       none: '0',
@@ -157,13 +169,13 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       lg: '12px',
       xl: '16px',
     };
-    root.style.setProperty('--border-radius-base', radiusMap[spacing.borderRadius]);
+    root.style.setProperty('--theme-border-radius', radiusMap[spacing.borderRadius]);
   }, [spacing]);
 
   // Apply component CSS variables
   useEffect(() => {
     const root = document.documentElement;
-    root.style.setProperty('--button-style', components.buttonStyle);
+    root.style.setProperty('--theme-button-style', components.buttonStyle);
     
     const shadowMap = {
       none: 'none',
@@ -171,15 +183,15 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       md: '0 4px 6px rgba(0,0,0,0.1)',
       lg: '0 10px 15px rgba(0,0,0,0.1)',
     };
-    root.style.setProperty('--card-shadow', shadowMap[components.cardShadow]);
-    root.style.setProperty('--input-style', components.inputStyle);
+    root.style.setProperty('--theme-card-shadow', shadowMap[components.cardShadow]);
+    root.style.setProperty('--theme-input-style', components.inputStyle);
   }, [components]);
 
   // Apply layout CSS variables
   useEffect(() => {
     const root = document.documentElement;
-    root.style.setProperty('--tab-style', layout.tabStyle);
-    root.style.setProperty('--sidebar-position', layout.sidebarPosition);
+    root.style.setProperty('--theme-tab-style', layout.tabStyle);
+    root.style.setProperty('--theme-sidebar-position', layout.sidebarPosition);
   }, [layout]);
 
   const isDark = ['dark', 'midnight', 'minimal', 'neon'].includes(currentPresetId);

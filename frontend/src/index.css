@@ -5,35 +5,31 @@
    ============================================ */
 
 @theme {
-  /* Backgrounds */
-  --color-bg-primary: #0f0f1a;
-  --color-bg-secondary: #1a1a2e;
-  --color-bg-tertiary: #16213e;
-  --color-bg-elevated: #1e1e3f;
-  --color-bg-overlay: rgba(0, 0, 0, 0.7);
+  /* Dynamic CSS Variables — updated by ThemeProvider */
+  --color-bg-primary: var(--theme-bg-primary, #0f0f1a);
+  --color-bg-secondary: var(--theme-bg-secondary, #1a1a2e);
+  --color-bg-tertiary: var(--theme-bg-tertiary, #16213e);
+  --color-bg-elevated: var(--theme-bg-elevated, #1e1e3f);
+  --color-bg-overlay: var(--theme-bg-overlay, rgba(0, 0, 0, 0.7));
   
-  /* Text */
-  --color-text-primary: #e0e0ff;
-  --color-text-secondary: #8892b0;
-  --color-text-tertiary: #5a6680;
-  --color-text-inverse: #0f0f1a;
+  --color-text-primary: var(--theme-text-primary, #e0e0ff);
+  --color-text-secondary: var(--theme-text-secondary, #8892b0);
+  --color-text-tertiary: var(--theme-text-tertiary, #5a6680);
+  --color-text-inverse: var(--theme-text-inverse, #0f0f1a);
   
-  /* Accents */
-  --color-accent-primary: #667eea;
-  --color-accent-secondary: #764ba2;
-  --color-accent-success: #4ade80;
-  --color-accent-warning: #fbbf24;
-  --color-accent-danger: #f87171;
-  --color-accent-info: #60a5fa;
+  --color-accent-primary: var(--theme-accent-primary, #667eea);
+  --color-accent-secondary: var(--theme-accent-secondary, #764ba2);
+  --color-accent-success: var(--theme-accent-success, #4ade80);
+  --color-accent-warning: var(--theme-accent-warning, #fbbf24);
+  --color-accent-danger: var(--theme-accent-danger, #f87171);
+  --color-accent-info: var(--theme-accent-info, #60a5fa);
   
-  /* Borders */
-  --color-border-light: rgba(255, 255, 255, 0.05);
-  --color-border-medium: rgba(255, 255, 255, 0.1);
-  --color-border-focus: #667eea;
+  --color-border-light: var(--theme-border-light, rgba(255, 255, 255, 0.05));
+  --color-border-medium: var(--theme-border-medium, rgba(255, 255, 255, 0.1));
+  --color-border-focus: var(--theme-border-focus, #667eea);
   
-  /* Gradients */
-  --color-gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --color-gradient-hero: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+  --color-gradient-primary: linear-gradient(135deg, var(--theme-accent-primary, #667eea) 0%, var(--theme-accent-secondary, #764ba2) 100%);
+  --color-gradient-hero: linear-gradient(135deg, var(--theme-bg-primary, #0f0f1a) 0%, var(--theme-bg-secondary, #1a1a2e) 50%, var(--theme-bg-tertiary, #16213e) 100%);
   
   /* Spacing */
   --spacing-xs: 4px;
@@ -45,10 +41,9 @@
   --spacing-xxxl: 64px;
   
   /* Typography */
-  --font-family-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family-sans: var(--theme-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
   --font-family-mono: 'Fira Code', 'Consolas', monospace;
   
-  /* Font sizes */
   --font-size-xs: 12px;
   --font-size-sm: 14px;
   --font-size-base: 16px;
@@ -80,22 +75,38 @@
 }
 
 /* ============================================
+   DYNAMIC THEME VARIABLES — Set by ThemeProvider
+   ============================================ */
+
+:root {
+  --theme-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --theme-font-size: 16px;
+  --theme-font-weight: 400;
+  --theme-line-height: 1.5;
+  --theme-density: 1;
+  --theme-sidebar-width: 256px;
+  --theme-border-radius: 8px;
+  --theme-card-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* ============================================
    DARK MODE (default)
    ============================================ */
 
 [data-theme="dark"] {
-  --color-bg-primary: #0f0f1a;
-  --color-bg-secondary: #1a1a2e;
-  --color-bg-tertiary: #16213e;
-  --color-bg-elevated: #1e1e3f;
-  --color-text-primary: #e0e0ff;
-  --color-text-secondary: #8892b0;
-  --color-text-tertiary: #5a6680;
-  --color-text-inverse: #0f0f1a;
-  --color-accent-primary: #667eea;
-  --color-accent-secondary: #764ba2;
-  --color-border-light: rgba(255, 255, 255, 0.05);
-  --color-border-medium: rgba(255, 255, 255, 0.1);
+  --theme-bg-primary: #0f0f1a;
+  --theme-bg-secondary: #1a1a2e;
+  --theme-bg-tertiary: #16213e;
+  --theme-bg-elevated: #1e1e3f;
+  --theme-text-primary: #e0e0ff;
+  --theme-text-secondary: #8892b0;
+  --theme-text-tertiary: #5a6680;
+  --theme-text-inverse: #0f0f1a;
+  --theme-accent-primary: #667eea;
+  --theme-accent-secondary: #764ba2;
+  --theme-border-light: rgba(255, 255, 255, 0.05);
+  --theme-border-medium: rgba(255, 255, 255, 0.1);
+  --theme-border-focus: #667eea;
 }
 
 /* ============================================
@@ -103,18 +114,19 @@
    ============================================ */
 
 [data-theme="light"] {
-  --color-bg-primary: #ffffff;
-  --color-bg-secondary: #f8f9fa;
-  --color-bg-tertiary: #e9ecef;
-  --color-bg-elevated: #ffffff;
-  --color-text-primary: #1a1a2e;
-  --color-text-secondary: #5a6680;
-  --color-text-tertiary: #8892b0;
-  --color-text-inverse: #ffffff;
-  --color-accent-primary: #667eea;
-  --color-accent-secondary: #764ba2;
-  --color-border-light: rgba(0, 0, 0, 0.05);
-  --color-border-medium: rgba(0, 0, 0, 0.1);
+  --theme-bg-primary: #ffffff;
+  --theme-bg-secondary: #f8f9fa;
+  --theme-bg-tertiary: #e9ecef;
+  --theme-bg-elevated: #ffffff;
+  --theme-text-primary: #1a1a2e;
+  --theme-text-secondary: #5a6680;
+  --theme-text-tertiary: #8892b0;
+  --theme-text-inverse: #ffffff;
+  --theme-accent-primary: #667eea;
+  --theme-accent-secondary: #764ba2;
+  --theme-border-light: rgba(0, 0, 0, 0.05);
+  --theme-border-medium: rgba(0, 0, 0, 0.1);
+  --theme-border-focus: #667eea;
 }
 
 /* ============================================
@@ -122,78 +134,82 @@
    ============================================ */
 
 [data-theme="midnight"] {
-  --color-bg-primary: #000000;
-  --color-bg-secondary: #0a0a0f;
-  --color-bg-tertiary: #12121f;
-  --color-accent-primary: #8b5cf6;
-  --color-accent-secondary: #a78bfa;
+  --theme-bg-primary: #000000;
+  --theme-bg-secondary: #0a0a0f;
+  --theme-bg-tertiary: #12121f;
+  --theme-accent-primary: #8b5cf6;
+  --theme-accent-secondary: #a78bfa;
+  --theme-border-light: rgba(255, 255, 255, 0.05);
+  --theme-border-medium: rgba(255, 255, 255, 0.1);
 }
 
 [data-theme="forest"] {
-  --color-bg-primary: #0f1a0f;
-  --color-bg-secondary: #1a2e1a;
-  --color-accent-primary: #10b981;
-  --color-accent-secondary: #34d399;
+  --theme-bg-primary: #0f1a0f;
+  --theme-bg-secondary: #1a2e1a;
+  --theme-accent-primary: #10b981;
+  --theme-accent-secondary: #34d399;
+  --theme-border-light: rgba(255, 255, 255, 0.05);
+  --theme-border-medium: rgba(255, 255, 255, 0.1);
 }
 
 [data-theme="ocean"] {
-  --color-bg-primary: #0a1628;
-  --color-bg-secondary: #0f2347;
-  --color-accent-primary: #0ea5e9;
-  --color-accent-secondary: #38bdf8;
+  --theme-bg-primary: #0a1628;
+  --theme-bg-secondary: #0f2347;
+  --theme-accent-primary: #0ea5e9;
+  --theme-accent-secondary: #38bdf8;
+  --theme-border-light: rgba(255, 255, 255, 0.05);
+  --theme-border-medium: rgba(255, 255, 255, 0.1);
 }
 
 [data-theme="sunset"] {
-  --color-bg-primary: #1a0f0f;
-  --color-bg-secondary: #2e1a1a;
-  --color-accent-primary: #f97316;
-  --color-accent-secondary: #fb923c;
+  --theme-bg-primary: #1a0f0f;
+  --theme-bg-secondary: #2e1a1a;
+  --theme-accent-primary: #f97316;
+  --theme-accent-secondary: #fb923c;
+  --theme-border-light: rgba(255, 255, 255, 0.05);
+  --theme-border-medium: rgba(255, 255, 255, 0.1);
 }
 
 [data-theme="minimal"] {
-  --color-bg-primary: #000000;
-  --color-bg-secondary: #111111;
-  --color-bg-tertiary: #222222;
-  --color-text-primary: #ffffff;
-  --color-text-secondary: #aaaaaa;
-  --color-accent-primary: #ffffff;
-  --color-accent-secondary: #888888;
+  --theme-bg-primary: #000000;
+  --theme-bg-secondary: #111111;
+  --theme-bg-tertiary: #222222;
+  --theme-text-primary: #ffffff;
+  --theme-text-secondary: #aaaaaa;
+  --theme-text-tertiary: #666666;
+  --theme-text-inverse: #000000;
+  --theme-accent-primary: #ffffff;
+  --theme-accent-secondary: #888888;
+  --theme-border-light: rgba(255, 255, 255, 0.1);
+  --theme-border-medium: rgba(255, 255, 255, 0.2);
 }
 
 [data-theme="neon"] {
-  --color-bg-primary: #0a0a0a;
-  --color-bg-secondary: #111111;
-  --color-accent-primary: #00ff88;
-  --color-accent-secondary: #00ccff;
-  --color-accent-success: #00ff00;
-  --color-accent-warning: #ffff00;
-  --color-accent-danger: #ff00ff;
+  --theme-bg-primary: #0a0a0a;
+  --theme-bg-secondary: #111111;
+  --theme-bg-tertiary: #1a1a1a;
+  --theme-accent-primary: #00ff88;
+  --theme-accent-secondary: #00ccff;
+  --theme-accent-success: #00ff00;
+  --theme-accent-warning: #ffff00;
+  --theme-accent-danger: #ff00ff;
+  --theme-accent-info: #00ccff;
+  --theme-text-primary: #ffffff;
+  --theme-text-secondary: #aaaaaa;
+  --theme-border-light: rgba(255, 255, 255, 0.1);
+  --theme-border-medium: rgba(255, 255, 255, 0.2);
 }
 
 /* ============================================
    GLOBAL STYLES
    ============================================ */
 
-:root {
-  /* Dynamic theme variables — set by ThemeProvider */
-  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-size-base: 16px;
-  --font-weight: 400;
-  --line-height: 1.5;
-  --density-multiplier: 1;
-  --sidebar-width: 256px;
-  --border-radius-base: 8px;
-  --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
-  --tab-style: buttons;
-}
-
 body {
   background: var(--color-bg-primary);
   color: var(--color-text-primary);
-  font-family: var(--font-family);
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight);
-  line-height: var(--line-height);
+  font-family: var(--font-family-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Scrollbar */
