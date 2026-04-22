@@ -157,7 +157,15 @@ function App() {
 
     return (
         <ThemeProvider>
-        <div className="botlands-app flex flex-col h-screen bg-bg-primary font-sans text-text-primary overflow-hidden selection:bg-accent-secondary">
+        <div 
+            className="botlands-app flex flex-col h-screen bg-bg-primary font-sans text-text-primary overflow-hidden selection:bg-accent-secondary"
+            style={{
+                fontFamily: 'var(--font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif)',
+                fontSize: 'var(--font-size-base, 16px)',
+                fontWeight: 'var(--font-weight, 400)',
+                lineHeight: 'var(--line-height, 1.5)',
+            }}
+        >
             {/* Top Navigation Tabs (IDE Style) */}
             <div className="h-9 flex items-end shrink-0 z-20 select-none overflow-x-auto no-scrollbar font-sans bg-bg-secondary border-b border-border-medium">
                 <button 
