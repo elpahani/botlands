@@ -1,6 +1,7 @@
 import type { DocLandPlugin } from './plugin.interface.js';
 import { pdfConverterPlugin } from './pdf.plugin.js';
 import { DocEditorPlugin } from './doc-editor.plugin.js';
+import { OCRPlugin } from './ocr.plugin.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 export class PluginManager {
@@ -10,6 +11,7 @@ export class PluginManager {
         // Загружаем базовые плагины
         this.register(pdfConverterPlugin);
         this.register(new DocEditorPlugin());
+        this.register(new OCRPlugin());
     }
 
     public register(plugin: DocLandPlugin) {

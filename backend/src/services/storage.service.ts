@@ -190,7 +190,8 @@ export class StorageService {
         const finalFilePath = path.join(docDir, `${revId}${ext}`);
         
         if (isTempFilePath && typeof content === 'string') {
-            fs.renameSync(content, finalFilePath);
+            fs.copyFileSync(content, finalFilePath);
+            fs.unlinkSync(content);
         } else {
             const buf = typeof content === 'string' ? Buffer.from(content, 'utf-8') : content;
             fs.writeFileSync(finalFilePath, buf);

@@ -47,6 +47,7 @@ function App() {
     
     const gridRef = useRef<HTMLDivElement>(null);
     const { selectedIds, setSelectedIds, selectionBox, handleMouseDown, toggleSelection } = useSelection(gridRef);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [isCreatingFolder, setIsCreatingFolder] = useState(false);
     const [newFolderName, setNewFolderName] = useState('');
@@ -97,6 +98,16 @@ function App() {
         } catch (e) {
             alert('Failed to create folder');
         }
+    };
+
+    const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            handleFileUpload(e.target.files, currentFolderId);
+        }
+    };
+
+    const handleUploadButtonClick = () => {
+        fileInputRef.current?.click();
     };
 
     const handleDeleteSelected = async () => {
@@ -212,6 +223,20 @@ function App() {
                         {currentFolderId === 'inbox' ? 'Inbox' : currentFolderId === 'storage' ? 'Storage' : folders.find(f => f.id === currentFolderId)?.name || 'Unknown'}
                     </h2>
                     <div className="flex items-center gap-3">
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            multiple
+                            onChange={handleFileInputChange}
+                            className="hidden"
+                        />
+                        <button 
+                            onClick={handleUploadButtonClick}
+                            className="p-2 hover:bg-slate-100 text-slate-500 rounded-lg transition-colors"
+                            title="Upload files"
+                        >
+                            <Upload className="w-5 h-5" />
+                        </button>
                         <button 
                             onClick={fetchWorkspace}
                             className="p-2 hover:bg-slate-100 text-slate-500 rounded-lg transition-colors"

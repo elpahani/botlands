@@ -8,3 +8,7 @@ data/
 
 # Env (ключи в корневом .env оркестратора)
 .env
+# OCR service virtual environment
+ocr-service/.venv312/
+ocr-service/.venv/
+vision-service/.venv/

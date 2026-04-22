@@ -7,30 +7,51 @@ services:
     ports:
       - "3001:3001"
     volumes:
-      - ${WORKSPACE_PATH:-./data}:/app/workspace
-      - ./data:/app/data
+      - ${WORKSPACE_PATH:-./data}:/app/data
     environment:
       - DATA_DIR=/app/data
-      - WORKSPACE_DIR=/app/workspace
       - NODE_ENV=production
       - OLLAMA_HOST=${OLLAMA_HOST:-http://ollama:11434}
+      - OCR_SERVICE_URL=http://ocr-service:8000
     networks:
       - botlands
       - inference
+    depends_on:
+      - ocr-service
 
   frontend:
     build:
       context: ./frontend
+      args:
+        - VITE_API_URL=http://localhost:3001/api
     container_name: botlands-frontend
     restart: unless-stopped
     ports:
       - "5173:5173"
-    environment:
-      - VITE_API_URL=http://localhost:3001/api
     depends_on:
       - backend
     networks:
       - botlands
+
+  ocr-service:
+    build:
+      context: ./ocr-service
+    container_name: botlands-ocr
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    networks:
+      - botlands
+    volumes:
+      - ${WORKSPACE_PATH:-./data}:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
 networks:
   botlands:
@@ -38,4 +59,4 @@ networks:
     driver: bridge
   inference:
     name: inference
-    external: true
+    driver: bridge
