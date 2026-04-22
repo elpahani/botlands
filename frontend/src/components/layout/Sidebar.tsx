@@ -82,7 +82,7 @@ export function Sidebar({
             <div className="flex-1 overflow-y-auto p-3 space-y-6">
                 <div className="space-y-1">
                     <button 
-                        className={`w-full flex items-center px-3 py-2.5 rounded-xl transition-colors ${currentFolderId === 'inbox' ? 'bg-accent-primary/10 text-accent-primary' : 'text-text-secondary hover:bg-bg-elevated hover:text-text-primary'}`}
+                        className={`w-full flex items-center px-3 py-1.5 rounded-lg transition-colors ${currentFolderId === 'inbox' ? 'bg-accent-primary/10 text-accent-primary' : 'text-text-secondary hover:bg-bg-elevated hover:text-text-primary'}`}
                         onClick={() => setCurrentFolderId('inbox')}
                     >
                         <div className={`p-1.5 rounded-lg mr-3 ${currentFolderId === 'inbox' ? 'bg-accent-primary/100 text-text-inverse' : 'bg-bg-elevated text-text-tertiary'}`}>
@@ -92,7 +92,7 @@ export function Sidebar({
                     </button>
 
                     <button 
-                        className={`w-full flex items-center px-3 py-2.5 rounded-xl transition-colors ${currentFolderId === 'storage' ? 'bg-accent-primary/10 text-accent-primary' : 'text-text-secondary hover:bg-bg-elevated hover:text-text-primary'}`}
+                        className={`w-full flex items-center px-3 py-1.5 rounded-lg transition-colors ${currentFolderId === 'storage' ? 'bg-accent-primary/10 text-accent-primary' : 'text-text-secondary hover:bg-bg-elevated hover:text-text-primary'}`}
                         onClick={() => setCurrentFolderId('storage')}
                     >
                         <div className={`p-1.5 rounded-lg mr-3 ${currentFolderId === 'storage' ? 'bg-accent-primary/100 text-text-inverse' : 'bg-bg-elevated text-text-tertiary'}`}>

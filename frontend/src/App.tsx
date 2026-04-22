@@ -166,18 +166,18 @@ function App() {
                 lineHeight: 'var(--theme-line-height, 1.5)',
             }}
         >
-            {/* Top Navigation Tabs (IDE Style) */}
-            <div className="h-9 flex items-end shrink-0 z-20 select-none overflow-x-auto no-scrollbar font-sans bg-bg-secondary border-b border-border-medium">
+            {/* Top Navigation Tabs */}
+            <div className="h-9 flex items-end shrink-0 z-20 select-none overflow-x-auto no-scrollbar bg-bg-secondary border-b border-border-medium">
                 <button 
                     onClick={() => setActiveTab('docland')}
                     className={`h-[35px] px-3 text-[13px] flex items-center gap-2 min-w-[150px] max-w-[200px] transition-none group cursor-pointer border-r border-border-medium ${
                         activeTab === 'docland' 
-                            ? 'border-t border-t-accent-primary bg-bg-primary text-text-inverse border-b border-b-transparent translate-y-[1px]' 
-                            : 'border-t border-t-transparent bg-bg-elevated text-text-secondary hover:bg-bg-tertiary hover:text-text-primary border-b border-b-transparent'
+                            ? 'bg-bg-secondary text-text-primary border-b border-b-transparent' 
+                            : 'bg-bg-secondary text-text-secondary hover:bg-bg-elevated hover:text-text-primary border-b border-b-transparent'
                     }`}
                 >
-                    <FolderIcon className={`w-4 h-4 ${activeTab === 'docland' ? 'text-accent-secondary' : 'text-text-tertiary'}`} /> 
-                    <span className="truncate flex-1 text-left">docland-workspace</span>
+                    <FolderIcon className={`w-4 h-4 ${activeTab === 'docland' ? 'text-text-primary' : 'text-text-tertiary'}`} /> 
+                    <span className="truncate flex-1 text-left">Docland</span>
                     <X className={`w-4 h-4 rounded-md p-0.5 transition-opacity ${
                         activeTab === 'docland' ? 'opacity-100 text-text-secondary hover:bg-bg-elevated' : 'opacity-0 group-hover:opacity-100 text-text-secondary hover:bg-bg-elevated'
                     }`} onClick={(e) => e.stopPropagation()} />
@@ -186,12 +186,12 @@ function App() {
                     onClick={() => setActiveTab('timeland')}
                     className={`h-[35px] px-3 text-[13px] flex items-center gap-2 min-w-[150px] max-w-[200px] transition-none group cursor-pointer border-r border-border-medium ${
                         activeTab === 'timeland' 
-                            ? 'border-t border-t-accent-primary bg-bg-primary text-text-inverse border-b border-b-transparent translate-y-[1px]' 
-                            : 'border-t border-t-transparent bg-bg-elevated text-text-secondary hover:bg-bg-tertiary hover:text-text-primary border-b border-b-transparent'
+                            ? 'bg-bg-secondary text-text-primary border-b border-b-transparent' 
+                            : 'bg-bg-secondary text-text-secondary hover:bg-bg-elevated hover:text-text-primary border-b border-b-transparent'
                     }`}
                 >
-                    <Calendar className={`w-4 h-4 ${activeTab === 'timeland' ? 'text-accent-info' : 'text-text-tertiary'}`} /> 
-                    <span className="truncate flex-1 text-left">Timeland.tsx</span>
+                    <Calendar className={`w-4 h-4 ${activeTab === 'timeland' ? 'text-text-primary' : 'text-text-tertiary'}`} /> 
+                    <span className="truncate flex-1 text-left">Timeland</span>
                     <X className={`w-4 h-4 rounded-md p-0.5 transition-opacity ${
                         activeTab === 'timeland' ? 'opacity-100 text-text-secondary hover:bg-bg-elevated' : 'opacity-0 group-hover:opacity-100 text-text-secondary hover:bg-bg-elevated'
                     }`} onClick={(e) => e.stopPropagation()} />
@@ -228,10 +228,10 @@ function App() {
                     </div>
                 )}
 
-                <div className="h-16 border-b border-border-medium bg-bg-secondary flex items-center px-6 shrink-0 z-10 justify-between">
-                    <h2 className="text-xl font-bold text-text-primary flex items-center gap-2">
+                <div className="h-9 border-b border-border-medium bg-bg-secondary flex items-center px-6 shrink-0 z-10 justify-between">
+                    <span className="text-sm font-medium text-text-primary flex items-center gap-2">
                         {currentFolderId === 'inbox' ? 'Inbox' : currentFolderId === 'storage' ? 'Storage' : folders.find(f => f.id === currentFolderId)?.name || 'Unknown'}
-                    </h2>
+                    </span>
                     <div className="flex items-center gap-3">
                         <input
                             ref={fileInputRef}
