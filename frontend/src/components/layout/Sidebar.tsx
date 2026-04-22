@@ -42,24 +42,24 @@ export function Sidebar({
         if (children.length === 0) return null;
 
         return (
-            <div className={`space-y-0.5 ${depth > 0 ? 'ml-4 border-l border-slate-200/60 pl-2 mt-0.5' : ''}`}>
+            <div className={`space-y-0.5 ${depth > 0 ? 'ml-4 border-l border-border-medium/60 pl-2 mt-0.5' : ''}`}>
                 {children.map(folder => (
                     <div key={folder.id}>
                         <div 
-                            className={`flex items-center group cursor-pointer rounded-lg px-2 py-1.5 transition-colors ${currentFolderId === folder.id ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
+                            className={`flex items-center group cursor-pointer rounded-lg px-2 py-1.5 transition-colors ${currentFolderId === folder.id ? 'bg-accent-primary/10 text-accent-primary' : 'text-text-secondary hover:bg-bg-elevated hover:text-text-primary'}`}
                             onClick={() => setCurrentFolderId(folder.id)}
                             onContextMenu={(e) => handleContextMenu(e, 'folder', folder.id)}
                         >
                             <button 
                                 onClick={(e) => toggleFolder(folder.id, e)}
-                                className={`p-0.5 rounded-md hover:bg-slate-200/50 text-slate-400 mr-1 ${folders.some(f => f.parentId === folder.id) ? 'opacity-100' : 'opacity-0'}`}
+                                className={`p-0.5 rounded-md hover:bg-bg-elevated/50 text-text-secondary mr-1 ${folders.some(f => f.parentId === folder.id) ? 'opacity-100' : 'opacity-0'}`}
                             >
                                 {expandedFolders[folder.id] ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
                             </button>
-                            <FolderIcon className={`w-4 h-4 mr-2 ${currentFolderId === folder.id ? 'text-indigo-500 fill-indigo-100' : 'text-slate-400 fill-slate-100/50'}`} />
+                            <FolderIcon className={`w-4 h-4 mr-2 ${currentFolderId === folder.id ? 'text-accent-primary fill-accent-primary/20' : 'text-text-secondary fill-bg-tertiary/50'}`} />
                             <span className="text-sm font-medium flex-1 truncate">{folder.name}</span>
                             <button 
-                                className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 rounded transition-all"
+                                className="opacity-0 group-hover:opacity-100 p-1 text-text-secondary hover:text-text-secondary hover:bg-bg-elevated/50 rounded transition-all"
                                 onClick={(e) => { e.stopPropagation(); handleContextMenu(e, 'folder', folder.id); }}
                             >
                                 <MoreVertical className="w-3.5 h-3.5" />
@@ -73,28 +73,28 @@ export function Sidebar({
     };
 
     return (
-        <div className="w-64 bg-slate-50 border-r border-slate-200 flex flex-col shrink-0">
-            <div className="p-4 border-b border-slate-200 bg-white">
+        <div className="w-64 bg-bg-secondary border-r border-border-medium flex flex-col shrink-0">
+            <div className="p-4 border-b border-border-medium bg-bg-secondary">
                 <h1 className="text-xl font-black bg-gradient-to-br from-indigo-600 to-violet-600 bg-clip-text text-transparent tracking-tight">DocLand</h1>
             </div>
             
             <div className="flex-1 overflow-y-auto p-3 space-y-6">
                 <div className="space-y-1">
                     <button 
-                        className={`w-full flex items-center px-3 py-2.5 rounded-xl transition-colors ${currentFolderId === 'inbox' ? 'bg-indigo-100/50 text-indigo-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
+                        className={`w-full flex items-center px-3 py-2.5 rounded-xl transition-colors ${currentFolderId === 'inbox' ? 'bg-accent-primary/10 text-accent-primary' : 'text-text-secondary hover:bg-bg-elevated hover:text-text-primary'}`}
                         onClick={() => setCurrentFolderId('inbox')}
                     >
-                        <div className={`p-1.5 rounded-lg mr-3 ${currentFolderId === 'inbox' ? 'bg-indigo-500 text-white' : 'bg-slate-200 text-slate-500'}`}>
+                        <div className={`p-1.5 rounded-lg mr-3 ${currentFolderId === 'inbox' ? 'bg-accent-primary/100 text-text-inverse' : 'bg-bg-elevated text-text-tertiary'}`}>
                             <Inbox className="w-4 h-4" />
                         </div>
                         <span className="text-sm font-bold">Inbox</span>
                     </button>
 
                     <button 
-                        className={`w-full flex items-center px-3 py-2.5 rounded-xl transition-colors ${currentFolderId === 'storage' ? 'bg-indigo-100/50 text-indigo-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
+                        className={`w-full flex items-center px-3 py-2.5 rounded-xl transition-colors ${currentFolderId === 'storage' ? 'bg-accent-primary/10 text-accent-primary' : 'text-text-secondary hover:bg-bg-elevated hover:text-text-primary'}`}
                         onClick={() => setCurrentFolderId('storage')}
                     >
-                        <div className={`p-1.5 rounded-lg mr-3 ${currentFolderId === 'storage' ? 'bg-indigo-500 text-white' : 'bg-slate-200 text-slate-500'}`}>
+                        <div className={`p-1.5 rounded-lg mr-3 ${currentFolderId === 'storage' ? 'bg-accent-primary/100 text-text-inverse' : 'bg-bg-elevated text-text-tertiary'}`}>
                             <Database className="w-4 h-4" />
                         </div>
                         <span className="text-sm font-bold flex-1 text-left">Storage</span>
@@ -103,10 +103,10 @@ export function Sidebar({
 
                 <div>
                     <div className="px-3 mb-2 flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Folders</span>
+                        <span className="text-xs font-bold text-text-secondary uppercase tracking-wider">Folders</span>
                         <button 
                             onClick={() => setIsCreatingFolder(true)}
-                            className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
+                            className="p-1 text-text-secondary hover:text-accent-primary hover:bg-accent-primary/10 rounded-md transition-colors"
                         >
                             <Plus className="w-4 h-4" />
                         </button>
@@ -128,7 +128,7 @@ export function Sidebar({
                                     else setIsCreatingFolder(false);
                                 }}
                                 placeholder="Folder name..."
-                                className="w-full px-3 py-1.5 text-sm bg-white border border-indigo-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                className="w-full px-3 py-1.5 text-sm bg-bg-secondary border border-indigo-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent"
                             />
                         </div>
                     )}
@@ -140,10 +140,10 @@ export function Sidebar({
             </div>
 
             {/* Settings Button - Bottom of Sidebar */}
-            <div className="px-3 py-2 border-t border-slate-200 bg-white">
+            <div className="px-3 py-2 border-t border-border-medium bg-bg-secondary">
                 <button 
                     onClick={() => setShowSettings(true)}
-                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-text-secondary hover:bg-accent-primary/10 hover:text-accent-primary transition-colors"
                 >
                     <Settings className="w-4 h-4" />
                     <span className="font-medium">Settings</span>
@@ -157,7 +157,7 @@ export function Sidebar({
                         <SettingsPanel />
                         <button 
                             onClick={() => setShowSettings(false)}
-                            className="absolute top-4 right-4 text-white/50 hover:text-white text-xl"
+                            className="absolute top-4 right-4 text-text-inverse/50 hover:text-text-inverse text-xl"
                         >
                             ✕
                         </button>

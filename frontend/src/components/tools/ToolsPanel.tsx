@@ -24,16 +24,16 @@ export function ToolsPanel(props: ToolsPanelProps) {
     const { isToolMenuOpen, setIsToolMenuOpen, selectedTool, setSelectedTool } = props;
 
     return (
-        <div className="w-80 bg-slate-50 border-l border-slate-200 flex flex-col shrink-0 z-10 shadow-sm">
-            <div className="p-4 border-b border-slate-200 bg-white shrink-0">
-                <h2 className="font-bold text-slate-800 flex items-center gap-2 mb-3">
-                    <Wrench className="w-5 h-5 text-indigo-500" />
+        <div className="w-80 bg-bg-secondary border-l border-border-medium flex flex-col shrink-0 z-10 shadow-sm">
+            <div className="p-4 border-b border-border-medium bg-bg-secondary shrink-0">
+                <h2 className="font-bold text-text-primary flex items-center gap-2 mb-3">
+                    <Wrench className="w-5 h-5 text-accent-primary" />
                     Tools & Plugins
                 </h2>
                 <div className="relative">
                     <button 
                         onClick={() => setIsToolMenuOpen(!isToolMenuOpen)}
-                        className="w-full flex items-center justify-between py-2 px-3 bg-white border border-slate-300 rounded-lg shadow-sm text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                        className="w-full flex items-center justify-between py-2 px-3 bg-bg-secondary border border-border-medium rounded-lg shadow-sm text-sm font-medium text-text-primary hover:bg-bg-secondary transition-colors"
                     >
                         <div className="flex items-center gap-2">
                             {selectedTool === 'pdf-converter' && <FileDown className="w-4 h-4 text-red-500" />}
@@ -44,16 +44,16 @@ export function ToolsPanel(props: ToolsPanelProps) {
                     </button>
                     
                     {isToolMenuOpen && (
-                        <div className="absolute top-full mt-1 left-0 w-full bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden z-50">
+                        <div className="absolute top-full mt-1 left-0 w-full bg-bg-secondary border border-border-medium rounded-lg shadow-xl overflow-hidden z-50">
                             <button 
                                 onClick={() => { setSelectedTool('pdf-converter'); setIsToolMenuOpen(false); }}
-                                className="w-full text-left px-3 py-2 text-sm font-medium hover:bg-indigo-50 hover:text-indigo-700 transition-colors flex items-center gap-2"
+                                className="w-full text-left px-3 py-2 text-sm font-medium hover:bg-accent-primary/10 hover:text-accent-primary transition-colors flex items-center gap-2"
                             >
                                 <FileDown className="w-4 h-4 text-red-500" /> PDF Converter
                             </button>
                             <button 
                                 onClick={() => { setSelectedTool('doc-editor'); setIsToolMenuOpen(false); }}
-                                className="w-full text-left px-3 py-2 text-sm font-medium hover:bg-indigo-50 hover:text-indigo-700 transition-colors flex items-center gap-2 border-t border-slate-100"
+                                className="w-full text-left px-3 py-2 text-sm font-medium hover:bg-accent-primary/10 hover:text-accent-primary transition-colors flex items-center gap-2 border-t border-border-light"
                             >
                                 <FileText className="w-4 h-4 text-blue-500" /> Doc Editor
                             </button>

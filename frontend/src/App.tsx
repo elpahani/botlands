@@ -24,7 +24,7 @@ const getFileCategory = (ext: string) => {
     return 'unknown';
 };
 
-const getFileIcon = (ext: string, className: string = "w-10 h-10 text-indigo-500 mb-3 opacity-90") => {
+const getFileIcon = (ext: string, className: string = "w-10 h-10 text-accent-primary mb-3 opacity-90") => {
     const category = getFileCategory(ext);
     switch (category) {
         case 'image': return <FileImage className={className} />;
@@ -157,38 +157,38 @@ function App() {
 
     return (
         <ThemeProvider>
-        <div className="botlands-app flex flex-col h-screen bg-[#1e1e1e] font-sans text-slate-300 overflow-hidden selection:bg-[#264f78]">
+        <div className="botlands-app flex flex-col h-screen bg-bg-primary font-sans text-text-primary overflow-hidden selection:bg-accent-secondary">
             {/* Top Navigation Tabs (IDE Style) */}
-            <div className="h-9 flex items-end shrink-0 z-20 select-none overflow-x-auto no-scrollbar font-sans bg-[#181818] border-b border-[#2d2d2d]">
+            <div className="h-9 flex items-end shrink-0 z-20 select-none overflow-x-auto no-scrollbar font-sans bg-bg-secondary border-b border-border-medium">
                 <button 
                     onClick={() => setActiveTab('docland')}
-                    className={`h-[35px] px-3 text-[13px] flex items-center gap-2 min-w-[150px] max-w-[200px] transition-none group cursor-pointer border-r border-[#2d2d2d] ${
+                    className={`h-[35px] px-3 text-[13px] flex items-center gap-2 min-w-[150px] max-w-[200px] transition-none group cursor-pointer border-r border-border-medium ${
                         activeTab === 'docland' 
-                            ? 'border-t border-t-[#007fd4] bg-[#1e1e1e] text-white border-b border-b-transparent translate-y-[1px]' 
-                            : 'border-t border-t-transparent bg-[#2d2d2d] text-[#969696] hover:bg-[#2b2d31] hover:text-[#cccccc] border-b border-b-transparent'
+                            ? 'border-t border-t-[#007fd4] bg-bg-primary text-text-inverse border-b border-b-transparent translate-y-[1px]' 
+                            : 'border-t border-t-transparent bg-bg-elevated text-text-secondary hover:bg-bg-tertiary hover:text-text-primary border-b border-b-transparent'
                     }`}
                 >
-                    <FolderIcon className={`w-4 h-4 ${activeTab === 'docland' ? 'text-[#dcb67a]' : 'text-[#8b9298]'}`} /> 
+                    <FolderIcon className={`w-4 h-4 ${activeTab === 'docland' ? 'text-accent-secondary' : 'text-text-tertiary'}`} /> 
                     <span className="truncate flex-1 text-left">docland-workspace</span>
                     <X className={`w-4 h-4 rounded-md p-0.5 transition-opacity ${
-                        activeTab === 'docland' ? 'opacity-100 text-[#969696] hover:bg-[#333]' : 'opacity-0 group-hover:opacity-100 text-[#969696] hover:bg-[#333]'
+                        activeTab === 'docland' ? 'opacity-100 text-text-secondary hover:bg-bg-elevated' : 'opacity-0 group-hover:opacity-100 text-text-secondary hover:bg-bg-elevated'
                     }`} onClick={(e) => e.stopPropagation()} />
                 </button>
                 <button 
                     onClick={() => setActiveTab('timeland')}
-                    className={`h-[35px] px-3 text-[13px] flex items-center gap-2 min-w-[150px] max-w-[200px] transition-none group cursor-pointer border-r border-[#2d2d2d] ${
+                    className={`h-[35px] px-3 text-[13px] flex items-center gap-2 min-w-[150px] max-w-[200px] transition-none group cursor-pointer border-r border-border-medium ${
                         activeTab === 'timeland' 
-                            ? 'border-t border-t-[#007fd4] bg-[#1e1e1e] text-white border-b border-b-transparent translate-y-[1px]' 
-                            : 'border-t border-t-transparent bg-[#2d2d2d] text-[#969696] hover:bg-[#2b2d31] hover:text-[#cccccc] border-b border-b-transparent'
+                            ? 'border-t border-t-[#007fd4] bg-bg-primary text-text-inverse border-b border-b-transparent translate-y-[1px]' 
+                            : 'border-t border-t-transparent bg-bg-elevated text-text-secondary hover:bg-bg-tertiary hover:text-text-primary border-b border-b-transparent'
                     }`}
                 >
-                    <Calendar className={`w-4 h-4 ${activeTab === 'timeland' ? 'text-[#4fc1ff]' : 'text-[#8b9298]'}`} /> 
+                    <Calendar className={`w-4 h-4 ${activeTab === 'timeland' ? 'text-accent-info' : 'text-text-tertiary'}`} /> 
                     <span className="truncate flex-1 text-left">Timeland.tsx</span>
                     <X className={`w-4 h-4 rounded-md p-0.5 transition-opacity ${
-                        activeTab === 'timeland' ? 'opacity-100 text-[#969696] hover:bg-[#333]' : 'opacity-0 group-hover:opacity-100 text-[#969696] hover:bg-[#333]'
+                        activeTab === 'timeland' ? 'opacity-100 text-text-secondary hover:bg-bg-elevated' : 'opacity-0 group-hover:opacity-100 text-text-secondary hover:bg-bg-elevated'
                     }`} onClick={(e) => e.stopPropagation()} />
                 </button>
-                <div className="flex-1 bg-[#181818] h-full"></div>
+                <div className="flex-1 bg-bg-secondary h-full"></div>
             </div>
 
             {/* Main Content Area */}
@@ -211,17 +211,17 @@ function App() {
 
                         <div className="flex-1 flex flex-col min-w-0 relative">
                 {uploading && (
-                    <div className="absolute inset-0 z-50 bg-white/80 backdrop-blur-sm flex items-center justify-center">
-                        <div className="bg-white p-6 rounded-2xl shadow-xl border border-slate-200 flex flex-col items-center">
-                            <Loader2 className="w-10 h-10 animate-spin text-indigo-600 mb-4" />
-                            <p className="text-lg font-bold text-slate-800">Uploading files...</p>
-                            <p className="text-sm text-slate-500 mt-1">Please wait while your files are processed</p>
+                    <div className="absolute inset-0 z-50 bg-bg-secondary/80 backdrop-blur-sm flex items-center justify-center">
+                        <div className="bg-bg-secondary p-6 rounded-2xl shadow-xl border border-border-medium flex flex-col items-center">
+                            <Loader2 className="w-10 h-10 animate-spin text-accent-primary mb-4" />
+                            <p className="text-lg font-bold text-text-primary">Uploading files...</p>
+                            <p className="text-sm text-text-tertiary mt-1">Please wait while your files are processed</p>
                         </div>
                     </div>
                 )}
 
-                <div className="h-16 border-b border-slate-200 bg-white flex items-center px-6 shrink-0 z-10 justify-between">
-                    <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <div className="h-16 border-b border-border-medium bg-bg-secondary flex items-center px-6 shrink-0 z-10 justify-between">
+                    <h2 className="text-xl font-bold text-text-primary flex items-center gap-2">
                         {currentFolderId === 'inbox' ? 'Inbox' : currentFolderId === 'storage' ? 'Storage' : folders.find(f => f.id === currentFolderId)?.name || 'Unknown'}
                     </h2>
                     <div className="flex items-center gap-3">
@@ -234,14 +234,14 @@ function App() {
                         />
                         <button 
                             onClick={handleUploadButtonClick}
-                            className="p-2 hover:bg-slate-100 text-slate-500 rounded-lg transition-colors"
+                            className="p-2 hover:bg-bg-elevated text-text-tertiary rounded-lg transition-colors"
                             title="Upload files"
                         >
                             <Upload className="w-5 h-5" />
                         </button>
                         <button 
                             onClick={fetchWorkspace}
-                            className="p-2 hover:bg-slate-100 text-slate-500 rounded-lg transition-colors"
+                            className="p-2 hover:bg-bg-elevated text-text-tertiary rounded-lg transition-colors"
                             title="Refresh"
                         >
                             <RefreshCcw className="w-5 h-5" />
@@ -251,7 +251,7 @@ function App() {
                 
                 <div 
                     ref={gridRef}
-                    className={`flex-1 overflow-y-auto p-6 transition-colors relative ${dragOverId === currentFolderId ? 'bg-indigo-50/50' : ''}`}
+                    className={`flex-1 overflow-y-auto p-6 transition-colors relative ${dragOverId === currentFolderId ? 'bg-accent-primary/10/50' : ''}`}
                     onMouseDown={handleMouseDown}
                     onDragOver={(e) => handleDragOver(e, currentFolderId)}
                     onDragLeave={handleDragLeave}
@@ -260,7 +260,7 @@ function App() {
                 >
                     {selectionBox && (
                         <div 
-                            className="fixed bg-indigo-500/20 border border-indigo-500 z-40 pointer-events-none"
+                            className="fixed bg-accent-primary/100/20 border border-accent-primary z-40 pointer-events-none"
                             style={{
                                 left: Math.min(selectionBox.startX, selectionBox.currentX),
                                 top: Math.min(selectionBox.startY, selectionBox.currentY),
@@ -271,11 +271,11 @@ function App() {
                     )}
 
                     {subFolders.length === 0 && folderDocs.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center text-slate-400">
-                            <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mb-6">
+                        <div className="h-full flex flex-col items-center justify-center text-text-secondary">
+                            <div className="w-24 h-24 bg-bg-tertiary rounded-full flex items-center justify-center mb-6">
                                 <Inbox className="w-10 h-10 opacity-50" />
                             </div>
-                            <p className="text-xl font-bold text-slate-500 mb-2">This folder is empty</p>
+                            <p className="text-xl font-bold text-text-tertiary mb-2">This folder is empty</p>
                             <p className="text-sm">Drag and drop files here to upload</p>
                         </div>
                     ) : (
@@ -290,18 +290,18 @@ function App() {
                                     onDragLeave={handleDragLeave}
                                     onDrop={(e) => handleDrop(e, folder.id)}
                                     onContextMenu={(e) => handleContextMenu(e, 'folder', folder.id)}
-                                    className={`selectable-item bg-white rounded-xl shadow-sm border p-4 cursor-pointer hover:shadow-md transition-all group active:scale-95 duration-100 ${
-                                        dragOverId === folder.id ? 'border-indigo-500 ring-2 ring-indigo-200' : 
-                                        selectedIds.includes(folder.id) ? 'border-indigo-500 ring-2 ring-indigo-500/50 bg-indigo-50/50' : 
-                                        'border-slate-200 hover:border-indigo-300 hover:shadow-md'
+                                    className={`selectable-item bg-bg-secondary rounded-xl shadow-sm border p-4 cursor-pointer hover:shadow-md transition-all group active:scale-95 duration-100 ${
+                                        dragOverId === folder.id ? 'border-accent-primary ring-2 ring-indigo-200' : 
+                                        selectedIds.includes(folder.id) ? 'border-accent-primary ring-2 ring-accent-primary/50 bg-accent-primary/10/50' : 
+                                        'border-border-medium hover:border-indigo-300 hover:shadow-md'
                                     }`}
                                     onClick={(e) => toggleSelection(folder.id, e.ctrlKey || e.metaKey)}
                                     onDoubleClick={() => setCurrentFolderId(folder.id)}
                                 >
                                     <div className="flex items-center justify-center h-20 mb-3">
-                                        <FolderIcon className={`w-16 h-16 ${dragOverId === folder.id ? 'text-indigo-600 fill-indigo-100' : 'text-slate-300 fill-slate-100 group-hover:text-slate-400'} transition-colors`} />
+                                        <FolderIcon className={`w-16 h-16 ${dragOverId === folder.id ? 'text-accent-primary fill-accent-primary/20' : 'text-text-primary fill-bg-tertiary group-hover:text-text-secondary'} transition-colors`} />
                                     </div>
-                                    <p className="text-sm font-bold text-slate-700 text-center truncate">{folder.name}</p>
+                                    <p className="text-sm font-bold text-text-primary text-center truncate">{folder.name}</p>
                                 </div>
                             ))}
 
@@ -315,10 +315,10 @@ function App() {
                                         draggable
                                         onDragStart={(e) => handleDragStart(e, doc.id, selectedIds)}
                                         onContextMenu={(e) => handleContextMenu(e, 'document', doc.id)}
-                                        className={`selectable-item bg-white rounded-xl shadow-sm border p-4 cursor-pointer transition-all relative overflow-hidden group active:scale-95 duration-100 ${
-                                            selectedIds.includes(doc.id) ? 'ring-2 ring-indigo-500 border-transparent shadow-md bg-indigo-50/50' : 
+                                        className={`selectable-item bg-bg-secondary rounded-xl shadow-sm border p-4 cursor-pointer transition-all relative overflow-hidden group active:scale-95 duration-100 ${
+                                            selectedIds.includes(doc.id) ? 'ring-2 ring-accent-primary border-transparent shadow-md bg-accent-primary/10/50' : 
                                             activeDocId === doc.id ? 'ring-2 ring-indigo-300 border-transparent shadow-md' : 
-                                            'border-slate-200 hover:border-indigo-300 hover:shadow-md'
+                                            'border-border-medium hover:border-indigo-300 hover:shadow-md'
                                         }`}
                                         onClick={(e) => {
                                             toggleSelection(doc.id, e.ctrlKey || e.metaKey);
@@ -329,8 +329,8 @@ function App() {
                                         <div className="flex flex-col items-center justify-center h-24 mb-3">
                                             {getFileIcon(ext)}
                                         </div>
-                                        <p className="text-sm font-bold text-slate-700 text-center truncate leading-tight" title={doc.title}>{doc.title}</p>
-                                        <p className="text-[10px] text-slate-400 text-center uppercase tracking-wider font-bold mt-1">{ext.replace('.', '')}</p>
+                                        <p className="text-sm font-bold text-text-primary text-center truncate leading-tight" title={doc.title}>{doc.title}</p>
+                                        <p className="text-[10px] text-text-secondary text-center uppercase tracking-wider font-bold mt-1">{ext.replace('.', '')}</p>
                                     </div>
                                 );
                             })}
@@ -369,7 +369,7 @@ function App() {
 
             {contextMenu && (
                 <div 
-                    className="fixed bg-white border border-slate-200 shadow-2xl rounded-lg py-1 w-48 z-50"
+                    className="fixed bg-bg-secondary border border-border-medium shadow-2xl rounded-lg py-1 w-48 z-50"
                     style={{ top: contextMenu.y, left: contextMenu.x }}
                     onClick={(e) => e.stopPropagation()}
                 >
@@ -377,7 +377,7 @@ function App() {
                         <>
                             {selectedIds.length === 1 && contextMenu.type === 'document' && (
                                 <button 
-                                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 font-medium"
+                                    className="w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-bg-elevated hover:text-accent-primary font-medium"
                                     onClick={() => { setActiveDocId(contextMenu.id); setContextMenu(null); }}
                                 >
                                     Select Document
@@ -385,14 +385,14 @@ function App() {
                             )}
                             {selectedIds.length === 1 && contextMenu.type === 'folder' && (
                                 <button 
-                                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 font-medium"
+                                    className="w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-bg-elevated hover:text-accent-primary font-medium"
                                     onClick={() => { setCurrentFolderId(contextMenu.id); setContextMenu(null); }}
                                 >
                                     Open Folder
                                 </button>
                             )}
                             <button 
-                                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-medium border-t border-slate-100"
+                                className="w-full text-left px-4 py-2 text-sm text-accent-danger hover:bg-accent-danger/10 font-medium border-t border-border-light"
                                 onClick={handleDeleteSelected}
                             >
                                 Delete {selectedIds.length > 1 ? `${selectedIds.length} items` : ''}
@@ -400,10 +400,10 @@ function App() {
                         </>
                     )}
                     {contextMenu.type === 'empty' && (
-                        <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 mb-1">
+                        <div className="px-4 py-3 bg-bg-secondary border-b border-border-light mb-1">
                             <label className="flex items-center gap-2 cursor-pointer w-full">
-                                <Upload className="w-4 h-4 text-indigo-500" />
-                                <span className="text-sm font-bold text-slate-700">Upload Files</span>
+                                <Upload className="w-4 h-4 text-accent-primary" />
+                                <span className="text-sm font-bold text-text-primary">Upload Files</span>
                                 <input 
                                     type="file" 
                                     className="hidden" 
