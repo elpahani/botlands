@@ -1,16 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
 import { api } from '../api.js';
-import type { Document, Folder } from '../types/index.js';
+import type { Document, Folder, Task } from '../types/index.js';
 import { io } from 'socket.io-client';
 
-export interface Task {
-    id: string;
-    title: string;
-    status: 'completed' | 'pending' | 'failed' | 'in_progress';
-    time: string;
-    date: string;
-    description: string;
-}
 
 export function useWorkspace() {
     const [documents, setDocuments] = useState<Document[]>([]);

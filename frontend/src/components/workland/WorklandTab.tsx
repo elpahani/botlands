@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { ListTodo, Plus, Play, Pause, CheckCircle, AlertCircle, Clock, FolderKanban } from 'lucide-react';
-import { api } from '../../api.js';
+import { FolderKanban, Plus, Play, CheckCircle, AlertCircle, Clock } from 'lucide-react';
+import axios from 'axios';
 import type { Scenario, Task } from '../../types/index.js';
 import { ScenarioSidebar } from './ScenarioSidebar.js';
 import { KanbanBoard } from './KanbanBoard.js';
-import { TaskCard } from './TaskCard.js';
 import { CreateScenarioModal } from './CreateScenarioModal.js';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 export const WorklandTab: React.FC = () => {
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
@@ -21,8 +22,8 @@ export const WorklandTab: React.FC = () => {
   const loadData = async () => {
     try {
       const [scenariosRes, tasksRes] = await Promise.all([
-        api.get('/scenarios'),
-        api.get('/workland-tasks')
+        axios.get(`${API_BASE}/scenarios`),
+        axios.get(`${API_BASE}/workland-tasks`)
       ]);
       setScenarios(scenariosRes.data);
       setTasks(tasksRes.data);
@@ -55,7 +56,6 @@ export const WorklandTab: React.FC = () => {
 
   return (
     <div className="h-full flex">
-      {/* Left Sidebar - Scenarios */}
       <ScenarioSidebar 
         scenarios={scenarios}
         selectedScenario={selectedScenario}
@@ -63,9 +63,7 @@ export const WorklandTab: React.FC = () => {
         onCreate={() => setShowCreateModal(true)}
       />
 
-      {/* Right Panel - Kanban Board */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
         <div className="h-9 border-b border-border-medium bg-bg-secondary flex items-center px-6 shrink-0 justify-between">
           <div className="flex items-center gap-4">
             <span className="text-sm font-medium text-text-primary flex items-center gap-2">
@@ -91,11 +89,9 @@ export const WorklandTab: React.FC = () => {
           </button>
         </div>
 
-        {/* Kanban Columns */}
         <KanbanBoard tasks={filteredTasks} onUpdate={loadData} />
       </div>
 
-      {/* Create Scenario Modal */}
       {showCreateModal && (
         <CreateScenarioModal 
           onClose={() => setShowCreateModal(false)}

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, isSameMonth, isSameDay, addDays } from 'date-fns';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, CheckCircle2, Clock, Check, History, Bot, ListTodo, AlertCircle, Loader2 } from 'lucide-react';
 import { useWorkspace } from '../../hooks/useWorkspace.js';
-import type { Task } from '../../hooks/useWorkspace.js';
+import type { Task } from '../../types/index.js';
 
 export const TimelandTab: React.FC = () => {
     const { tasks } = useWorkspace();
@@ -96,9 +96,9 @@ export const TimelandTab: React.FC = () => {
                 const dateKey = format(day, 'yyyy-MM-dd');
                 const dayTasks = tasksByDate[dateKey] || [];
                 const completedCount = dayTasks.filter(t => t.status === 'completed').length;
-                const pendingCount = dayTasks.filter(t => t.status === 'pending').length;
-                const inProgressCount = dayTasks.filter(t => t.status === 'in_progress').length;
-                const failedCount = dayTasks.filter(t => t.status === 'failed').length;
+                const pendingCount = dayTasks.filter(t => t.status === 'waiting').length;
+                const inProgressCount = dayTasks.filter(t => t.status === 'active').length;
+                const failedCount = dayTasks.filter(t => t.status === 'error').length;
 
                 days.push(
                     <div
@@ -135,15 +135,15 @@ export const TimelandTab: React.FC = () => {
                                     key={task.id} 
                                     className={`text-[10px] px-1.5 py-1 rounded truncate border flex items-center gap-1 ${
                                         task.status === 'completed' ? 'bg-accent-success/20 text-accent-success border-accent-success' :
-                                        task.status === 'in_progress' ? 'bg-accent-info/20 text-accent-info border-accent-info' :
-                                        task.status === 'pending' ? 'bg-accent-warning/20 text-accent-warning border-accent-warning' :
+                                        task.status === 'active' ? 'bg-accent-info/20 text-accent-info border-accent-info' :
+                                        task.status === 'waiting' ? 'bg-accent-warning/20 text-accent-warning border-accent-warning' :
                                         'bg-accent-danger/20 text-accent-danger border-accent-danger'
                                     }`}
                                 >
                                     {task.status === 'completed' && <CheckCircle2 className="w-3 h-3 shrink-0" />}
-                                    {task.status === 'in_progress' && <Loader2 className="w-3 h-3 shrink-0 animate-spin" />}
-                                    {task.status === 'pending' && <Clock className="w-3 h-3 shrink-0" />}
-                                    {task.status === 'failed' && <AlertCircle className="w-3 h-3 shrink-0" />}
+                                    {task.status === 'active' && <Loader2 className="w-3 h-3 shrink-0 animate-spin" />}
+                                    {task.status === 'waiting' && <Clock className="w-3 h-3 shrink-0" />}
+                                    {task.status === 'error' && <AlertCircle className="w-3 h-3 shrink-0" />}
                                     <span className="truncate">{task.time} - {task.title}</span>
                                 </div>
                             ))}
@@ -218,8 +218,8 @@ export const TimelandTab: React.FC = () => {
                                 <div key={task.id} className="bg-bg-tertiary border border-border-medium rounded-xl p-4 shadow-sm relative overflow-hidden group">
                                     <div className={`absolute top-0 left-0 w-1 h-full ${
                                         task.status === 'completed' ? 'bg-accent-success' :
-                                        task.status === 'in_progress' ? 'bg-accent-info' :
-                                        task.status === 'pending' ? 'bg-accent-warning' : 'bg-accent-danger'
+                                        task.status === 'active' ? 'bg-accent-info' :
+                                        task.status === 'waiting' ? 'bg-accent-warning' : 'bg-accent-danger'
                                     }`} />
                                     
                                     <div className="flex items-start justify-between mb-2">
@@ -234,13 +234,13 @@ export const TimelandTab: React.FC = () => {
                                     <div className="flex items-center gap-1.5">
                                         <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
                                             task.status === 'completed' ? 'bg-accent-success/20 text-accent-success' :
-                                            task.status === 'in_progress' ? 'bg-accent-info/20 text-accent-info' :
-                                            task.status === 'pending' ? 'bg-accent-warning/20 text-accent-warning' : 'bg-accent-danger/20 text-accent-danger'
+                                            task.status === 'active' ? 'bg-accent-info/20 text-accent-info' :
+                                            task.status === 'waiting' ? 'bg-accent-warning/20 text-accent-warning' : 'bg-accent-danger/20 text-accent-danger'
                                         }`}>
                                             {task.status === 'completed' && <Check className="w-3 h-3" />}
-                                            {task.status === 'in_progress' && <Loader2 className="w-3 h-3 animate-spin" />}
-                                            {task.status === 'pending' && <Clock className="w-3 h-3" />}
-                                            {task.status === 'failed' && <AlertCircle className="w-3 h-3" />}
+                                            {task.status === 'active' && <Loader2 className="w-3 h-3 animate-spin" />}
+                                            {task.status === 'waiting' && <Clock className="w-3 h-3" />}
+                                            {task.status === 'error' && <AlertCircle className="w-3 h-3" />}
                                             {task.status}
                                         </span>
                                     </div>

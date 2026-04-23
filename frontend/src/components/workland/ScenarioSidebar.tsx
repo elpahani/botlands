@@ -1,6 +1,9 @@
-import { FolderKanban, Plus, ChevronRight, Trash2 } from 'lucide-react';
+import axios from 'axios';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+
+import { FolderKanban, Plus, Trash2 } from 'lucide-react';
 import type { Scenario } from '../../types/index.js';
-import { api } from '../../api.js';
 
 interface ScenarioSidebarProps {
   scenarios: Scenario[];
@@ -19,7 +22,7 @@ export const ScenarioSidebar: React.FC<ScenarioSidebarProps> = ({
     e.stopPropagation();
     if (confirm('Delete this scenario and all its tasks?')) {
       try {
-        await api.delete(`/scenarios/${id}`);
+        await axios.delete(`${API_BASE}/scenarios/${id}`);
         onSelect(null);
       } catch (err) {
         console.error('Failed to delete scenario:', err);
@@ -39,7 +42,6 @@ export const ScenarioSidebar: React.FC<ScenarioSidebarProps> = ({
     <div className="w-64 bg-bg-secondary border-r border-border-medium flex flex-col shrink-0"
       style={{ width: 'var(--theme-sidebar-width, 256px)' }}
     >
-      {/* Header */}
       <div className="h-9 border-b border-border-medium bg-bg-secondary flex items-center px-3 shrink-0 justify-between">
         <span className="text-sm font-medium text-text-primary">Scenarios</span>
         <button 
@@ -50,7 +52,6 @@ export const ScenarioSidebar: React.FC<ScenarioSidebarProps> = ({
         </button>
       </div>
 
-      {/* List */}
       <div className="flex-1 overflow-y-auto p-2 space-y-1">
         <button
           onClick={() => onSelect(null)}

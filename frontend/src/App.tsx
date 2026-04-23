@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { FileText, Loader2, RefreshCcw, FileDown, Folder as FolderIcon, Inbox, FileImage, FileAudio, FileVideo, FileSpreadsheet, FileCode, FileArchive, File as FileGeneric, Upload, Calendar, X } from 'lucide-react';
+import { FileText, Loader2, RefreshCcw, FileDown, Folder as FolderIcon, Inbox, FileImage, FileAudio, FileVideo, FileSpreadsheet, FileCode, FileArchive, File as FileGeneric, Upload, Calendar, X, Briefcase } from 'lucide-react';
 import { api } from './api.js';
 import { useWorkspace } from './hooks/useWorkspace.js';
 import { useDragAndDrop } from './hooks/useDragAndDrop.js';
@@ -9,6 +9,7 @@ import { Sidebar } from './components/layout/Sidebar.js';
 import { ToolsPanel } from './components/tools/ToolsPanel.js';
 import { DocumentViewerModal } from './components/preview/DocumentViewerModal.js';
 import { TimelandTab } from './components/timeland/TimelandTab.js';
+import { WorklandTab } from './components/workland/WorklandTab.js';
 import { ThemeProvider } from './design-system/ThemeProvider.js';
 
 const getFileCategory = (ext: string) => {
@@ -40,7 +41,7 @@ const getFileIcon = (ext: string, className: string = "w-10 h-10 text-accent-pri
 };
 
 function App() {
-    const [activeTab, setActiveTab] = useState<'docland' | 'timeland'>('docland');
+    const [activeTab, setActiveTab] = useState<'docland' | 'timeland' | 'workland'>('docland');
     const { documents, folders, currentFolderId, setCurrentFolderId, selectedDoc, setSelectedDoc, fetchWorkspace } = useWorkspace();
     const [activeDocId, setActiveDocId] = useState<string | null>(null);
     const { dragOverId, uploading, handleDragOver, handleDragLeave, handleDrop, handleDragStart, handleFileUpload } = useDragAndDrop({ fetchWorkspace, documents });
@@ -194,6 +195,20 @@ function App() {
                     <span className="truncate flex-1 text-left">Timeland</span>
                     <X className={`w-4 h-4 rounded-md p-0.5 transition-opacity ${
                         activeTab === 'timeland' ? 'opacity-100 text-text-secondary hover:bg-bg-elevated' : 'opacity-0 group-hover:opacity-100 text-text-secondary hover:bg-bg-elevated'
+                    }`} onClick={(e) => e.stopPropagation()} />
+                </button>
+                <button 
+                    onClick={() => setActiveTab('workland')}
+                    className={`h-[35px] px-3 text-[13px] flex items-center gap-2 min-w-[150px] max-w-[200px] transition-none group cursor-pointer border-r border-border-medium ${
+                        activeTab === 'workland' 
+                            ? 'bg-bg-secondary text-text-primary border-b border-b-transparent' 
+                            : 'bg-bg-secondary text-text-secondary hover:bg-bg-elevated hover:text-text-primary border-b border-b-transparent'
+                    }`}
+                >
+                    <Briefcase className={`w-4 h-4 ${activeTab === 'workland' ? 'text-text-primary' : 'text-text-tertiary'}`} /> 
+                    <span className="truncate flex-1 text-left">Workland</span>
+                    <X className={`w-4 h-4 rounded-md p-0.5 transition-opacity ${
+                        activeTab === 'workland' ? 'opacity-100 text-text-secondary hover:bg-bg-elevated' : 'opacity-0 group-hover:opacity-100 text-text-secondary hover:bg-bg-elevated'
                     }`} onClick={(e) => e.stopPropagation()} />
                 </button>
                 <div className="flex-1 bg-bg-secondary h-full"></div>
@@ -427,8 +442,10 @@ function App() {
                 </div>
             )}
                     </>
-                ) : (
+                ) : activeTab === 'timeland' ? (
                     <TimelandTab />
+                ) : (
+                    <WorklandTab />
                 )}
             </div>
         </div>

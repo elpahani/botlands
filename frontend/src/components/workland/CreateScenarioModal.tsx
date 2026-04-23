@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { X, FolderKanban } from 'lucide-react';
-import { api } from '../../api.js';
+import axios from 'axios';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 interface CreateScenarioModalProps {
   onClose: () => void;
@@ -22,7 +24,7 @@ export const CreateScenarioModal: React.FC<CreateScenarioModalProps> = ({
     
     setLoading(true);
     try {
-      await api.post('/scenarios', { title, description, color });
+      await axios.post(`${API_BASE}/scenarios`, { title, description, color });
       onCreate();
       onClose();
     } catch (err) {

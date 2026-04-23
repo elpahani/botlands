@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Clock, Play, Pause, CheckCircle, AlertCircle, RotateCcw } from 'lucide-react';
+import { Clock, Play, Pause, CheckCircle, AlertCircle } from 'lucide-react';
 import type { Task } from '../../types/index.js';
 import { TaskCard } from './TaskCard.js';
 

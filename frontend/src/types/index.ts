@@ -28,11 +28,13 @@ export interface Task {
     title: string;
     description: string;
     status: TaskStatus;
+    date: string;        // для Timeland
+    time: string;        // для Timeland
     scenarioId: string;
-    linkedDocumentId?: string;  // связь с документом Botlands
+    linkedDocumentId?: string;
     createdAt: string;
     updatedAt: string;
-    assignee?: string;          // кто выполняет (например "Fargus")
+    assignee?: string;
 }
 
 export interface Scenario {
