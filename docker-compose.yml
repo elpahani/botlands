@@ -23,7 +23,7 @@ services:
     build:
       context: ./frontend
       args:
-        - VITE_API_URL=http://localhost:3001/api
+        - VITE_API_URL=/api
     container_name: botlands-frontend
     restart: unless-stopped
     ports:
