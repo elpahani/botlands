@@ -11,6 +11,7 @@ services:
       - vmland:/app/vmland
     cap_add:
       - SYS_ADMIN
+    privileged: true
     environment:
       - DATA_DIR=/app/data
       - VM_BASE_PATH=/app/vmland

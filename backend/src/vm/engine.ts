@@ -77,11 +77,13 @@ export async function spawnVM(options: VMSpawnOptions): Promise<VMExecution> {
   let args: string[];
 
   if (machineType === 'python') {
-    command = 'python3';
+    command = '/usr/bin/python3';
     args = [scriptFile];
+    bwrapArgs.push('--ro-bind', '/usr/bin/python3', '/usr/bin/python3');
   } else if (machineType === 'node') {
-    command = 'node';
+    command = '/usr/bin/node';
     args = [scriptFile];
+    bwrapArgs.push('--ro-bind', '/usr/bin/node', '/usr/bin/node');
   } else if (machineType === 'rust') {
     command = 'rust-script';
     args = [scriptFile];
