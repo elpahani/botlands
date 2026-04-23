@@ -29,19 +29,24 @@ export const CreateScenarioModal: React.FC<CreateScenarioModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return;
+    console.log('[CreateScenario] Submit:', { title, description, color: COLORS[colorIdx].name });
+    if (!title.trim()) {
+      console.log('[CreateScenario] Title empty, aborting');
+      return;
+    }
 
     setLoading(true);
     try {
-      await axios.post(`${API_BASE}/scenarios`, {
+      const response = await axios.post(`${API_BASE}/scenarios`, {
         title,
         description,
         color: COLORS[colorIdx].name,
       });
-      onCreate();
-      onClose();
+      console.log('[CreateScenario] Success:', response.data);
+      onClose();  // Закрываем ПЕРВЫМ
+      onCreate(); // Потом обновляем данные
     } catch (err) {
-      console.error('Failed to create scenario:', err);
+      console.error('[CreateScenario] Failed:', err);
       alert('Failed to create scenario');
     } finally {
       setLoading(false);
@@ -178,7 +183,8 @@ export const CreateScenarioModal: React.FC<CreateScenarioModalProps> = ({
               className="flex-1 px-4 py-2.5 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 backgroundColor: 'var(--color-accent-primary)',
-                color: 'white',
+                color: '#ffffff',
+                fontWeight: 500,
               }}
             >
               {loading ? 'Creating...' : 'Create'}

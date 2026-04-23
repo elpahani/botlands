@@ -26,7 +26,7 @@ export const WorklandTab: React.FC = () => {
     try {
       const [scenariosRes, tasksRes, docsRes] = await Promise.all([
         axios.get(`${API_BASE}/scenarios`),
-        axios.get(`${API_BASE}/workland-tasks`),
+        axios.get(`${API_BASE}/tasks`),
         axios.get(`${API_BASE}/documents`)
       ]);
       setScenarios(scenariosRes.data);

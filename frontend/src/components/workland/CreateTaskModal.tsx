@@ -30,7 +30,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
 
     setLoading(true);
     try {
-      await axios.post(`${API_BASE}/workland-tasks`, {
+      await axios.post(`${API_BASE}/tasks`, {
         title,
         description,
         scenarioId,

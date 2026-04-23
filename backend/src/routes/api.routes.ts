@@ -36,8 +36,20 @@ router.get('/tasks', (req, res) => {
 
 router.post('/tasks', (req, res) => {
     try {
-        const { title, status, time, date, description } = req.body;
-        const task = storageService.createTask(title, status, time, date, description);
+        const { title, status, time, date, description, scenarioId, linkedDocumentId, assignee } = req.body;
+        const now = new Date().toISOString();
+        const defaultTime = time || now.split('T')[1]?.slice(0,5) || '00:00';
+        const defaultDate = date || now.split('T')[0] || now.slice(0,10);
+        const task = storageService.createTask(
+            title, 
+            status || 'waiting', 
+            defaultTime, 
+            defaultDate, 
+            description || '',
+            scenarioId,
+            linkedDocumentId,
+            assignee
+        );
         logAction('USER', 'CREATE_TASK', { id: task.id, title });
         wsService.broadcastUpdate();
         res.status(201).json(task);

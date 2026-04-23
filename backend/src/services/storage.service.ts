@@ -306,10 +306,14 @@ export class StorageService {
         return Object.values(this.readDB().tasks);
     }
 
-    createTask(title: string, status: 'completed' | 'pending' | 'failed' | 'in_progress', time: string, date: string, description: string): Task {
+    createTask(title: string, status: Task['status'], time: string, date: string, description: string, scenarioId?: string, linkedDocumentId?: string, assignee?: string): Task {
         const db = this.readDB();
         const id = uuidv4();
-        const newTask: Task = { id, title, status, time, date, description };
+        const now = new Date().toISOString();
+        const newTask: Task = { id, title, status, time, date, description, createdAt: now, updatedAt: now };
+        if (scenarioId) newTask.scenarioId = scenarioId;
+        if (linkedDocumentId) newTask.linkedDocumentId = linkedDocumentId;
+        if (assignee) newTask.assignee = assignee;
         db.tasks[id] = newTask;
         this.writeDB(db);
         return newTask;
