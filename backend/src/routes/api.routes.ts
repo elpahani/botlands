@@ -239,4 +239,74 @@ router.post('/documents/:id/execute-plugin', async (req, res) => {
     }
 });
 
+// ─── Workland API ───
+
+// Scenarios
+router.get('/scenarios', (req, res) => {
+    try {
+        const scenarios = storageService.listScenarios();
+        res.json(scenarios);
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+router.post('/scenarios', (req, res) => {
+    try {
+        const { title, description, color } = req.body;
+        const scenario = storageService.createScenario(title, description, color);
+        res.json(scenario);
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+router.put('/scenarios/:id', (req, res) => {
+    try {
+        const scenario = storageService.updateScenario(req.params.id, req.body);
+        res.json(scenario);
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+router.delete('/scenarios/:id', (req, res) => {
+    try {
+        storageService.deleteScenario(req.params.id);
+        res.json({ success: true });
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Workland Tasks (расширенные)
+router.get('/workland-tasks', (req, res) => {
+    try {
+        const tasks = storageService.listTasks().filter((t: any) => t.scenarioId);
+        res.json(tasks);
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+router.post('/workland-tasks', (req, res) => {
+    try {
+        const { scenarioId, title, description, linkedDocumentId, assignee } = req.body;
+        const task = storageService.createWorklandTask(scenarioId, title, description, linkedDocumentId, assignee);
+        res.json(task);
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+router.put('/workland-tasks/:id/status', (req, res) => {
+    try {
+        const { status } = req.body;
+        const task = storageService.updateTaskStatus(req.params.id, status);
+        res.json(task);
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 export default router;

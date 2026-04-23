@@ -20,9 +20,19 @@ export class StorageService {
     }
 
     private initialize() {
-        if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-        if (!fs.existsSync(FILES_DIR)) fs.mkdirSync(FILES_DIR, { recursive: true });
+        console.log(`[Storage] DATA_DIR: ${DATA_DIR}`);
+        console.log(`[Storage] METADATA_FILE: ${METADATA_FILE}`);
+        
+        if (!fs.existsSync(DATA_DIR)) {
+            console.log('[Storage] Creating DATA_DIR...');
+            fs.mkdirSync(DATA_DIR, { recursive: true });
+        }
+        if (!fs.existsSync(FILES_DIR)) {
+            console.log('[Storage] Creating FILES_DIR...');
+            fs.mkdirSync(FILES_DIR, { recursive: true });
+        }
         if (!fs.existsSync(METADATA_FILE)) {
+            console.log('[Storage] Creating new metadata.json (first run or new workspace)');
             fs.writeFileSync(METADATA_FILE, JSON.stringify({ 
                 documents: {},
                 folders: {
@@ -31,6 +41,10 @@ export class StorageService {
                 },
                 tasks: {}
             }, null, 2));
+        } else {
+            console.log('[Storage] Found existing metadata.json, loading data...');
+            const stats = fs.statSync(METADATA_FILE);
+            console.log(`[Storage] metadata.json size: ${stats.size} bytes`);
         }
     }
 
@@ -318,6 +332,122 @@ export class StorageService {
             delete db.tasks[id];
             this.writeDB(db);
         }
+    }
+
+    // ─── Workland Scenarios ───
+
+    listScenarios(): import('../models/types.js').Scenario[] {
+        const db = this.readDB();
+        return Object.values(db.scenarios || {});
+    }
+
+    createScenario(title: string, description: string, color?: string): import('../models/types.js').Scenario {
+        const db = this.readDB();
+        const id = uuidv4();
+        const now = new Date().toISOString();
+        const newScenario: any = { 
+            id, 
+            title, 
+            description, 
+            status: 'inactive',
+            taskIds: [],
+            createdAt: now,
+            updatedAt: now
+        };
+        if (color) newScenario.color = color;
+        if (!db.scenarios) db.scenarios = {};
+        db.scenarios[id] = newScenario;
+        this.writeDB(db);
+        return newScenario;
+    }
+
+    updateScenario(id: string, updates: Partial<import('../models/types.js').Scenario>): import('../models/types.js').Scenario {
+        const db = this.readDB();
+        if (!db.scenarios) db.scenarios = {};
+        const scenario = db.scenarios[id];
+        if (!scenario) throw new Error('Scenario not found');
+        
+        const updated = { ...scenario, ...updates, id, updatedAt: new Date().toISOString() };
+        db.scenarios[id] = updated;
+        this.writeDB(db);
+        return updated;
+    }
+
+    deleteScenario(id: string) {
+        const db = this.readDB();
+        if (db.scenarios?.[id]) {
+            delete db.scenarios[id];
+            // Удаляем связанные задачи
+            Object.values(db.tasks).forEach(task => {
+                if (task.scenarioId === id) delete db.tasks[task.id];
+            });
+            this.writeDB(db);
+        }
+    }
+
+    // ─── Workland Tasks (расширенные) ───
+
+    createWorklandTask(scenarioId: string, title: string, description: string, linkedDocumentId?: string, assignee?: string): Task {
+        const db = this.readDB();
+        const id = uuidv4();
+        const now = new Date().toISOString();
+        const dateParts = now.split('T');
+        const newTask: Task = { 
+            id, 
+            title, 
+            status: 'waiting',
+            time: (dateParts[1] || '00:00').slice(0,5),
+            date: dateParts[0] || now.slice(0,10),
+            description,
+            createdAt: now,
+            updatedAt: now
+        };
+        if (scenarioId) {
+            newTask.scenarioId = scenarioId;
+        }
+        if (linkedDocumentId) {
+            newTask.linkedDocumentId = linkedDocumentId;
+        }
+        if (assignee) {
+            newTask.assignee = assignee;
+        }
+        db.tasks[id] = newTask;
+        
+        // Добавляем задачу в сценарий
+        if (scenarioId && db.scenarios && db.scenarios[scenarioId]) {
+            db.scenarios[scenarioId].taskIds.push(id);
+        }
+        
+        this.writeDB(db);
+        return newTask;
+    }
+
+    updateTaskStatus(id: string, status: Task['status']): Task {
+        const db = this.readDB();
+        const task = db.tasks[id];
+        if (!task) throw new Error('Task not found');
+        
+        task.status = status;
+        task.updatedAt = new Date().toISOString();
+        
+        // Обновляем статус сценария если все задачи выполнены
+        if (task.scenarioId && db.scenarios) {
+            const scenario = db.scenarios[task.scenarioId];
+            if (scenario) {
+                const tasks = scenario.taskIds
+                    .map(tid => db.tasks[tid])
+                    .filter((t): t is Task => !!t);
+                const allCompleted = tasks.every(t => t.status === 'completed');
+                const hasError = tasks.some(t => t.status === 'error');
+                
+                if (allCompleted) scenario.status = 'completed';
+                else if (hasError) scenario.status = 'error';
+                else scenario.status = 'active';
+            }
+        }
+        
+        this.writeDB(db);
+        return task;
     }
 
     getFilePath(id: string, revId: string, type: 'original' | 'pdf' = 'original'): string {

@@ -22,14 +22,31 @@ export interface Folder {
 export interface Task {
     id: string;
     title: string;
-    status: 'completed' | 'pending' | 'failed' | 'in_progress';
+    status: 'completed' | 'pending' | 'failed' | 'in_progress' | 'inactive' | 'waiting' | 'active' | 'paused' | 'error';
     time: string;
-    date: string; // ISO Date string yyyy-MM-dd
+    date: string;
     description: string;
+    scenarioId?: string;
+    linkedDocumentId?: string;
+    assignee?: string;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
+export interface Scenario {
+    id: string;
+    title: string;
+    description: string;
+    status: 'inactive' | 'active' | 'paused' | 'completed' | 'error';
+    taskIds: string[];
+    createdAt: string;
+    updatedAt: string;
+    color?: string;
 }
 
 export interface Database {
     documents: Record<string, Document>;
     folders: Record<string, Folder>;
     tasks: Record<string, Task>;
+    scenarios?: Record<string, Scenario>;
 }

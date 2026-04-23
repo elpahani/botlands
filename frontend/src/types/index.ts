@@ -19,8 +19,36 @@ export interface Folder {
     parentId: string | null;
 }
 
+// Workland Types
+export type TaskStatus = 'inactive' | 'waiting' | 'active' | 'paused' | 'completed' | 'error';
+export type ScenarioStatus = 'inactive' | 'active' | 'paused' | 'completed' | 'error';
+
+export interface Task {
+    id: string;
+    title: string;
+    description: string;
+    status: TaskStatus;
+    scenarioId: string;
+    linkedDocumentId?: string;  // связь с документом Botlands
+    createdAt: string;
+    updatedAt: string;
+    assignee?: string;          // кто выполняет (например "Fargus")
+}
+
+export interface Scenario {
+    id: string;
+    title: string;
+    description: string;
+    status: ScenarioStatus;
+    taskIds: string[];
+    createdAt: string;
+    updatedAt: string;
+    color?: string;             // цвет сценария для Kanban
+}
+
 export interface WorkspaceData {
     documents: Document[];
     folders: Folder[];
-    tasks?: any[];
+    tasks?: Task[];
+    scenarios?: Scenario[];
 }
