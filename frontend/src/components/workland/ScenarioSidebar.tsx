@@ -30,6 +30,7 @@ export const ScenarioSidebar: React.FC<ScenarioSidebarProps> = ({
       try {
         await axios.delete(`${API_BASE}/scenarios/${id}`);
         onSelect(null);
+        onCreate(); // Обновляем список
       } catch (err) {
         console.error('Failed to delete scenario:', err);
       }
