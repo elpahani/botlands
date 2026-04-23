@@ -9,13 +9,36 @@ interface CreateScenarioModalProps {
   onCreate: () => void;
 }
 
+// CSS классы цветов - соответствуют переменным темы
+const colorClasses = [
+  'bg-accent-primary',
+  'bg-accent-success', 
+  'bg-accent-warning',
+  'bg-accent-danger',
+  'bg-accent-secondary',
+  'bg-accent-info',
+  'bg-bg-tertiary',
+  'bg-text-tertiary',
+];
+
+const colorValues = [
+  'accent-primary',
+  'accent-success',
+  'accent-warning',
+  'accent-danger',
+  'accent-secondary',
+  'accent-info',
+  'bg-tertiary',
+  'text-tertiary',
+];
+
 export const CreateScenarioModal: React.FC<CreateScenarioModalProps> = ({
   onClose,
   onCreate,
 }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [color, setColor] = useState('#667eea');
+  const [selectedColor, setSelectedColor] = useState(0); // index in colorClasses
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -24,19 +47,21 @@ export const CreateScenarioModal: React.FC<CreateScenarioModalProps> = ({
     
     setLoading(true);
     try {
-      await axios.post(`${API_BASE}/scenarios`, { title, description, color });
+      // Отправляем значение CSS переменной
+      await axios.post(`${API_BASE}/scenarios`, { 
+        title, 
+        description, 
+        color: colorValues[selectedColor]
+      });
       onCreate();
       onClose();
     } catch (err) {
       console.error('Failed to create scenario:', err);
+      alert('Failed to create scenario');
     } finally {
       setLoading(false);
     }
   };
-
-  const colors = [
-    '#667eea', '#10b981', '#f97316', '#ec4899', '#8b5cf6', '#06b6d4', '#f59e0b', '#ef4444'
-  ];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg-overlay/60 backdrop-blur-sm"
@@ -58,40 +83,47 @@ export const CreateScenarioModal: React.FC<CreateScenarioModalProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm text-text-secondary mb-1">Title</label>
+            <label className="block text-sm font-medium text-text-secondary mb-1.5">
+              Title
+            </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g., Project Alpha"
-              className="w-full px-3 py-2 rounded-lg bg-bg-secondary border border-border-medium text-text-primary placeholder:text-text-tertiary focus:border-accent-primary focus:outline-none"
+              placeholder="Enter scenario title..."
+              className="w-full px-3 py-2 rounded-lg bg-bg-secondary border border-border-medium text-text-primary placeholder-text-tertiary focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary transition-all"
               autoFocus
             />
           </div>
 
           <div>
-            <label className="block text-sm text-text-secondary mb-1">Description</label>
+            <label className="block text-sm font-medium text-text-secondary mb-1.5">
+              Description
+            </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="What is this scenario about?"
+              placeholder="Describe the scenario..."
               rows={3}
-              className="w-full px-3 py-2 rounded-lg bg-bg-secondary border border-border-medium text-text-primary placeholder:text-text-tertiary focus:border-accent-primary focus:outline-none resize-none"
+              className="w-full px-3 py-2 rounded-lg bg-bg-secondary border border-border-medium text-text-primary placeholder-text-tertiary focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary transition-all resize-none"
             />
           </div>
 
           <div>
-            <label className="block text-sm text-text-secondary mb-2">Color</label>
+            <label className="block text-sm font-medium text-text-secondary mb-2">
+              Color
+            </label>
             <div className="flex gap-2">
-              {colors.map(c => (
+              {colorClasses.map((colorClass, i) => (
                 <button
-                  key={c}
+                  key={i}
                   type="button"
-                  onClick={() => setColor(c)}
-                  className={`w-8 h-8 rounded-full border-2 transition-all ${
-                    color === c ? 'border-text-primary scale-110' : 'border-transparent hover:scale-105'
+                  onClick={() => setSelectedColor(i)}
+                  className={`w-8 h-8 rounded-lg ${colorClass} transition-all hover:scale-110 ${
+                    selectedColor === i 
+                      ? 'ring-2 ring-offset-2 ring-offset-bg-primary ring-accent-primary scale-110' 
+                      : 'opacity-70 hover:opacity-100'
                   }`}
-                  style={{ backgroundColor: c }}
                 />
               ))}
             </div>
@@ -101,14 +133,14 @@ export const CreateScenarioModal: React.FC<CreateScenarioModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 rounded-lg border border-border-medium text-text-secondary hover:bg-bg-elevated transition-colors"
+              className="flex-1 px-4 py-2 rounded-lg border border-border-medium text-text-secondary hover:bg-bg-elevated hover:text-text-primary transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={!title.trim() || loading}
-              className="flex-1 px-4 py-2 rounded-lg bg-accent-primary text-text-inverse hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex-1 px-4 py-2 rounded-lg bg-accent-primary text-white font-medium hover:bg-accent-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               {loading ? 'Creating...' : 'Create'}
             </button>

@@ -23,9 +23,23 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
     });
   };
   
-  // Get color value helper
-  const getColor = (key: keyof ColorTokens, fallback: string): string => {
-    return currentTheme.colors?.[key] || fallback;
+  // Convert rgb/rgba to hex
+  const rgbToHex = (rgb: string): string => {
+    const match = rgb.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (!match) return rgb.startsWith('#') ? rgb : '#000000';
+    const [, r, g, b] = match;
+    return '#' + [r, g, b].map(x => {
+      const hex = parseInt(x).toString(16);
+      return hex.length === 1 ? '0' + hex : hex;
+    }).join('');
+  };
+
+  // Get color value helper - reads from CSS variable
+  const getColor = (key: keyof ColorTokens): string => {
+    if (typeof window === 'undefined') return '#000000';
+    const cssVar = `--theme-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
+    const value = getComputedStyle(document.documentElement).getPropertyValue(cssVar).trim();
+    return rgbToHex(value) || '#000000';
   };
 
   return (
@@ -111,24 +125,24 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {[
-                { key: 'accentPrimary' as keyof ColorTokens, label: 'Accent', default: '#007fd4' },
-                { key: 'accentSecondary' as keyof ColorTokens, label: 'Secondary', default: '#264f78' },
-                { key: 'bgPrimary' as keyof ColorTokens, label: 'Background', default: '#1e1e1e' },
-                { key: 'textPrimary' as keyof ColorTokens, label: 'Text', default: '#cccccc' },
-                { key: 'borderMedium' as keyof ColorTokens, label: 'Border', default: '#2d2d2d' },
-                { key: 'bgElevated' as keyof ColorTokens, label: 'Elevated', default: '#2d2d2d' },
+                { key: 'accentPrimary' as keyof ColorTokens, label: 'Accent' },
+                { key: 'accentSecondary' as keyof ColorTokens, label: 'Secondary' },
+                { key: 'bgPrimary' as keyof ColorTokens, label: 'Background' },
+                { key: 'textPrimary' as keyof ColorTokens, label: 'Text' },
+                { key: 'borderMedium' as keyof ColorTokens, label: 'Border' },
+                { key: 'bgElevated' as keyof ColorTokens, label: 'Elevated' },
               ].map((color) => (
                 <div key={String(color.key)} className="flex items-center gap-3 p-3 rounded-lg border border-border-medium bg-bg-secondary">
                   <input
                     type="color"
-                    value={getColor(color.key, color.default)}
+                    value={getColor(color.key)}
                     onChange={(e) => handleColorChange(color.key, e.target.value)}
                     className="w-8 h-8 rounded cursor-pointer border-0 p-0"
                   />
                   <div>
                     <div className="text-sm font-medium text-text-primary">{color.label}</div>
                     <div className="text-xs text-text-tertiary">
-                      {getColor(color.key, color.default)}
+                      {getColor(color.key)}
                     </div>
                   </div>
                 </div>
