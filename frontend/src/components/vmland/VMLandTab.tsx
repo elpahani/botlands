@@ -9,6 +9,7 @@ export const VMLandTab: React.FC = () => {
   const [executions, setExecutions] = useState<VMExecution[]>([]);
   const [script, setScript] = useState('print("Hello from VMLand!")');
   const [machineType, setMachineType] = useState<'python' | 'node' | 'rust'>('python');
+  const [deps, setDeps] = useState('');
   const [loading, setLoading] = useState(false);
   const logsRef = useRef<HTMLPreElement>(null);
 
@@ -35,6 +36,7 @@ export const VMLandTab: React.FC = () => {
         scriptContent: script,
         machineType,
         timeoutMs: 30000,
+        dependencies: deps.split('\n').filter(d => d.trim()),
       });
       loadExecutions();
     } finally {
@@ -81,6 +83,15 @@ export const VMLandTab: React.FC = () => {
             rows={10}
             className="w-full px-3 py-2 rounded-lg bg-bg-primary border border-border-medium text-text-primary placeholder-text-tertiary focus:outline-none focus:border-accent-primary text-sm font-mono resize-y min-h-[200px]"
             placeholder="Enter your script here..."
+          />
+
+          <label className="block text-sm font-medium text-text-secondary">Dependencies (one per line)</label>
+          <textarea
+            value={deps}
+            onChange={(e) => setDeps(e.target.value)}
+            rows={3}
+            className="w-full px-3 py-2 rounded-lg bg-bg-primary border border-border-medium text-text-primary placeholder-text-tertiary focus:outline-none focus:border-accent-primary text-sm font-mono resize-y min-h-[60px]"
+            placeholder="requests&#10;numpy>=1.20"
           />
 
           <button

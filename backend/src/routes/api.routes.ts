@@ -324,7 +324,7 @@ router.put('/workland-tasks/:id/status', (req, res) => {
 // VM Land — execution endpoints
 router.post('/vm/execute', async (req, res) => {
     try {
-        const { taskId, scriptContent, machineType, timeoutMs, memoryLimit, networkEnabled } = req.body;
+        const { taskId, scriptContent, machineType, timeoutMs, memoryLimit, networkEnabled, dependencies } = req.body;
         const task = storageService.getTask(taskId);
         if (!task) {
             res.status(404).json({ error: 'Task not found' });
@@ -339,6 +339,7 @@ router.post('/vm/execute', async (req, res) => {
             timeoutMs,
             memoryLimit,
             networkEnabled,
+            dependencies,
         });
 
         // Update task with execution reference

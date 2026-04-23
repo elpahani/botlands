@@ -40,6 +40,7 @@ export interface VMSpawnOptions {
   timeoutMs?: number;
   memoryLimit?: number; // MB
   networkEnabled?: boolean;
+  dependencies?: string[]; // e.g. ["requests", "numpy>=1.20"]
 }
 
 export const VM_TEMPLATES: VMTemplate[] = [

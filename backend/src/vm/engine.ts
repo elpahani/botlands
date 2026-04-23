@@ -4,6 +4,8 @@ import { join } from 'path';
 import { EventEmitter } from 'events';
 import type { VMExecution, VMSpawnOptions } from './types.js';
 import { v4 as uuidv4 } from 'uuid';
+import { machinePool } from './machine-pool.js';
+import { dependencyResolver } from './dependency-resolver.js';
 
 const VM_BASE_PATH = process.env.VM_BASE_PATH || '/app/vmland';
 const MAX_PARALLEL_EXECUTIONS = 4;
@@ -26,7 +28,7 @@ export function getRunningExecutions(): VMExecution[] {
 }
 
 export async function spawnVM(options: VMSpawnOptions): Promise<VMExecution> {
-  const { task, scriptContent, machineType, timeoutMs = DEFAULT_TIMEOUT_MS, memoryLimit = DEFAULT_MEMORY_MB, networkEnabled = true } = options;
+  const { task, scriptContent, machineType, timeoutMs = DEFAULT_TIMEOUT_MS, memoryLimit = DEFAULT_MEMORY_MB, networkEnabled = true, dependencies = [] } = options;
 
   if (runningCount >= MAX_PARALLEL_EXECUTIONS) {
     throw new Error(`Max parallel executions reached (${MAX_PARALLEL_EXECUTIONS})`);
@@ -34,14 +36,21 @@ export async function spawnVM(options: VMSpawnOptions): Promise<VMExecution> {
 
   const executionId = uuidv4();
   const taskId = task.id;
-  const workspacePath = join(VM_BASE_PATH, `${machineType}-${executionId}`, 'workspace');
+  const machine = machinePool.getOrCreateMachine(machineType, executionId);
+  const workspacePath = machine.workspacePath;
   const logFilePath = join(VM_BASE_PATH, `${machineType}-${executionId}`, 'logs.txt');
 
   mkdirSync(workspacePath, { recursive: true });
 
+  // Write script
   const scriptFile = machineType === 'python' ? 'script.py' :
                      machineType === 'node' ? 'script.js' : 'script.rs';
   writeFileSync(join(workspacePath, scriptFile), scriptContent);
+
+  // Write dependencies if provided
+  if (dependencies.length > 0) {
+    dependencyResolver.writeDependencies(workspacePath, machineType, dependencies);
+  }
 
   const execution: VMExecution = {
     id: executionId,
@@ -57,8 +66,30 @@ export async function spawnVM(options: VMSpawnOptions): Promise<VMExecution> {
     logFilePath,
   };
 
+  // Resolve package manager
+  const packageManager = dependencyResolver.resolve(workspacePath, machineType);
+  let installLogs = '';
+
+  if (packageManager) {
+    try {
+      installLogs = await machinePool.setupDependencies(machine, packageManager);
+    } catch (err: any) {
+      console.warn(`[VM] Failed to install dependencies: ${err.message}`);
+      installLogs = err.message;
+    }
+  }
+
+  // Get run command from package manager
+  const runCmd = packageManager?.getRunCommand(workspacePath, scriptFile) ?? {
+    binary: machineType === 'python' ? '/usr/bin/python3' : '/usr/bin/node',
+    args: [scriptFile],
+  };
+
+  // Prepare bwrap args
   const bwrapArgs = [
     '--ro-bind', '/usr', '/usr',
+    '--ro-bind', '/usr/bin/python3', '/usr/bin/python3',
+    '--ro-bind', '/usr/bin/node', '/usr/bin/node',
     '--ro-bind', '/bin', '/bin',
     '--ro-bind', '/lib', '/lib',
     '--ro-bind', '/lib64', '/lib64',
@@ -73,31 +104,14 @@ export async function spawnVM(options: VMSpawnOptions): Promise<VMExecution> {
 
   const prlimitArgs = [`--as=${memoryLimit * 1024 * 1024}`];
 
-  let command: string;
-  let args: string[];
-
-  if (machineType === 'python') {
-    command = '/usr/bin/python3';
-    args = [scriptFile];
-    bwrapArgs.push('--ro-bind', '/usr/bin/python3', '/usr/bin/python3');
-  } else if (machineType === 'node') {
-    command = '/usr/bin/node';
-    args = [scriptFile];
-    bwrapArgs.push('--ro-bind', '/usr/bin/node', '/usr/bin/node');
-  } else if (machineType === 'rust') {
-    command = 'rust-script';
-    args = [scriptFile];
-  } else {
-    throw new Error(`Unknown machine type: ${machineType}`);
-  }
-
-  const fullArgs = [...bwrapArgs, '--', 'prlimit', ...prlimitArgs, command, ...args];
+  const fullArgs = [...bwrapArgs, '--', 'prlimit', ...prlimitArgs, runCmd.binary, ...runCmd.args];
 
   const child = spawn('bwrap', fullArgs, {
     env: {
       ...process.env,
       HOME: '/tmp',
       PYTHONDONTWRITEBYTECODE: '1',
+      PATH: `${machine.venvPath}/bin:${process.env.PATH}`,
     },
     detached: false,
   });
@@ -108,6 +122,7 @@ export async function spawnVM(options: VMSpawnOptions): Promise<VMExecution> {
 
   const logBuffer: string[] = [];
 
+  // Buffer logs and flush every 100ms
   const logInterval = setInterval(() => {
     if (logBuffer.length > 0) {
       const text = logBuffer.join('');
@@ -125,21 +140,12 @@ export async function spawnVM(options: VMSpawnOptions): Promise<VMExecution> {
     logBuffer.push(chunk.toString());
   });
 
-  const timeout = setTimeout(() => {
-    if (!child.killed) {
-      child.kill('SIGKILL');
-      execution.status = 'error';
-      execution.output = 'Execution timed out';
-      execution.completedAt = new Date().toISOString();
-      vmEventEmitter.emit(`vm:completed:${executionId}`, execution);
-    }
-  }, timeoutMs);
-
+  // Handle completion
   child.on('exit', (code) => {
     runningCount--;
     clearInterval(logInterval);
-    clearTimeout(timeout);
 
+    // Flush remaining logs
     if (logBuffer.length > 0) {
       const text = logBuffer.join('');
       appendFileSync(logFilePath, text);
@@ -150,6 +156,7 @@ export async function spawnVM(options: VMSpawnOptions): Promise<VMExecution> {
     execution.status = code === 0 ? 'completed' : 'error';
     execution.completedAt = new Date().toISOString();
 
+    // Read output file if exists
     const outputPath = join(workspacePath, 'output.json');
     if (existsSync(outputPath)) {
       try {
@@ -159,28 +166,46 @@ export async function spawnVM(options: VMSpawnOptions): Promise<VMExecution> {
       }
     }
 
+    // Read full logs
     if (existsSync(logFilePath)) {
       try {
-        execution.output = readFileSync(logFilePath, 'utf-8');
+        const logs = readFileSync(logFilePath, 'utf-8');
+        execution.output = installLogs ? `[Install logs]:\n${installLogs}\n\n[Execution logs]:\n${logs}` : logs;
       } catch {
-        // ignore
+        execution.output = '';
       }
     }
 
     vmEventEmitter.emit(`vm:completed:${executionId}`, execution);
     activeExecutions.delete(executionId);
+
+    // Schedule cleanup
+    machinePool.cleanup(executionId, machineType);
   });
 
+  // Handle errors
   child.on('error', (err) => {
     runningCount--;
     clearInterval(logInterval);
-    clearTimeout(timeout);
     execution.status = 'error';
     execution.output = err.message;
     execution.completedAt = new Date().toISOString();
     vmEventEmitter.emit(`vm:completed:${executionId}`, execution);
     activeExecutions.delete(executionId);
   });
+
+  // Timeout
+  const timeout = setTimeout(() => {
+    if (!child.killed) {
+      child.kill('SIGKILL');
+      execution.status = 'error';
+      execution.output = 'Execution timed out';
+      execution.completedAt = new Date().toISOString();
+      vmEventEmitter.emit(`vm:completed:${executionId}`, execution);
+    }
+  }, timeoutMs);
+
+  child.on('exit', () => clearTimeout(timeout));
 
   activeExecutions.set(executionId, { process: child, execution, logBuffer, logInterval });
 
