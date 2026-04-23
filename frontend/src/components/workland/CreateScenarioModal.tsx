@@ -9,7 +9,7 @@ interface CreateScenarioModalProps {
   onCreate: () => void;
 }
 
-// CSS классы цветов - соответствуют переменным темы
+// CSS классы цветов - только accent цвета темы
 const colorClasses = [
   'bg-accent-primary',
   'bg-accent-success', 
@@ -17,8 +17,6 @@ const colorClasses = [
   'bg-accent-danger',
   'bg-accent-secondary',
   'bg-accent-info',
-  'bg-bg-tertiary',
-  'bg-text-tertiary',
 ];
 
 const colorValues = [
@@ -28,8 +26,6 @@ const colorValues = [
   'accent-danger',
   'accent-secondary',
   'accent-info',
-  'bg-tertiary',
-  'text-tertiary',
 ];
 
 export const CreateScenarioModal: React.FC<CreateScenarioModalProps> = ({
