@@ -82,6 +82,7 @@ export const WorklandTab: React.FC = () => {
         selectedScenario={selectedScenario}
         onSelect={setSelectedScenario}
         onCreate={() => setShowCreateModal(true)}
+        onRefresh={loadData}
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">

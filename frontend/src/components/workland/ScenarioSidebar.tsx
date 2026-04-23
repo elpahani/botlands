@@ -11,7 +11,8 @@ interface ScenarioSidebarProps {
   tasks: Task[];
   selectedScenario: string | null;
   onSelect: (id: string | null) => void;
-  onCreate: () => void;
+  onCreate: () => void;      // открыть модалку создания
+  onRefresh: () => void;    // обновить список
 }
 
 export const ScenarioSidebar: React.FC<ScenarioSidebarProps> = ({
@@ -20,6 +21,7 @@ export const ScenarioSidebar: React.FC<ScenarioSidebarProps> = ({
   selectedScenario,
   onSelect,
   onCreate,
+  onRefresh,
 }) => {
   const [scenariosOpen, setScenariosOpen] = useState(true);
   const [tasksOpen, setTasksOpen] = useState(true);
@@ -30,7 +32,7 @@ export const ScenarioSidebar: React.FC<ScenarioSidebarProps> = ({
       try {
         await axios.delete(`${API_BASE}/scenarios/${id}`);
         onSelect(null);
-        onCreate(); // Обновляем список
+        onRefresh(); // Обновляем список
       } catch (err) {
         console.error('Failed to delete scenario:', err);
       }
