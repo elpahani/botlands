@@ -443,9 +443,13 @@ function App() {
             )}
                     </>
                 ) : activeTab === 'timeland' ? (
-                    <TimelandTab />
+                    <div className="flex-1 h-full overflow-hidden">
+                        <TimelandTab />
+                    </div>
                 ) : (
-                    <WorklandTab />
+                    <div className="flex-1 h-full overflow-hidden">
+                        <WorklandTab />
+                    </div>
                 )}
             </div>
         </div>
