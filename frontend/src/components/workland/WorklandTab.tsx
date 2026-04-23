@@ -29,6 +29,8 @@ export const WorklandTab: React.FC = () => {
         axios.get(`${API_BASE}/tasks`),
         axios.get(`${API_BASE}/documents`)
       ]);
+      console.log('[Workland] Scenarios:', scenariosRes.data.length, scenariosRes.data.map((s: any) => s.title));
+      console.log('[Workland] Tasks:', tasksRes.data.length, tasksRes.data.map((t: any) => ({ title: t.title, scenarioId: t.scenarioId })));
       setScenarios(scenariosRes.data);
       setTasks(tasksRes.data);
       setDocuments(docsRes.data);

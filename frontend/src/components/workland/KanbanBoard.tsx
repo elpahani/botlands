@@ -9,11 +9,11 @@ interface KanbanBoardProps {
 }
 
 const columns = [
-  { id: 'waiting', label: 'Waiting', icon: Clock, color: 'text-accent-warning' },
-  { id: 'active', label: 'Active', icon: Play, color: 'text-accent-info' },
-  { id: 'paused', label: 'Paused', icon: Pause, color: 'text-text-tertiary' },
-  { id: 'completed', label: 'Completed', icon: CheckCircle, color: 'text-accent-success' },
-  { id: 'error', label: 'Error', icon: AlertCircle, color: 'text-accent-danger' },
+  { id: 'waiting', label: 'Backlog', icon: Clock, color: 'text-accent-warning', statuses: ['waiting', 'pending', 'inactive'] },
+  { id: 'active', label: 'Active', icon: Play, color: 'text-accent-info', statuses: ['active', 'in_progress'] },
+  { id: 'paused', label: 'Paused', icon: Pause, color: 'text-text-tertiary', statuses: ['paused'] },
+  { id: 'completed', label: 'Done', icon: CheckCircle, color: 'text-accent-success', statuses: ['completed'] },
+  { id: 'error', label: 'Error', icon: AlertCircle, color: 'text-accent-danger', statuses: ['error', 'failed'] },
 ];
 
 export const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, onUpdate }) => {
@@ -51,7 +51,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, onUpdate }) => 
     <div className="flex-1 overflow-x-auto overflow-y-hidden p-4">
       <div className="flex gap-4 h-full min-w-max">
         {columns.map(column => {
-          const columnTasks = tasks.filter(t => t.status === column.id);
+          const columnTasks = tasks.filter(t => column.statuses.includes(t.status));
           const Icon = column.icon;
           
           return (
