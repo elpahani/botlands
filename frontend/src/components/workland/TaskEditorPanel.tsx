@@ -63,85 +63,70 @@ export const TaskEditorPanel: React.FC<TaskEditorPanelProps> = ({
     }
   };
 
-  const statusOptions: { value: Task['status']; label: string; icon: any; color: string }[] = [
-    { value: 'waiting', label: 'Waiting', icon: Clock, color: 'text-accent-warning' },
-    { value: 'active', label: 'Active', icon: Play, color: 'text-accent-info' },
-    { value: 'completed', label: 'Completed', icon: CheckCircle, color: 'text-accent-success' },
-    { value: 'error', label: 'Error', icon: AlertCircle, color: 'text-accent-danger' },
+  const statusOptions = [
+    { value: 'waiting' as const, label: 'Waiting', icon: Clock },
+    { value: 'active' as const, label: 'Active', icon: Play },
+    { value: 'completed' as const, label: 'Completed', icon: CheckCircle },
+    { value: 'error' as const, label: 'Error', icon: AlertCircle },
   ];
 
   const linkedDoc = documents.find(d => d.id === linkedDocumentId);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg rounded-xl border shadow-xl p-6"
-        style={{ 
-          backgroundColor: 'var(--color-bg-primary)', 
-          borderColor: 'var(--color-border-medium)',
-          maxHeight: '90vh',
-          overflow: 'auto'
-        }}
+        className="w-full max-w-[480px] rounded-xl bg-bg-primary border border-border-medium shadow-2xl p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-bold" style={{ color: 'var(--color-text-primary)' }}>
+          <h3 className="text-lg font-bold text-text-primary">
             Task Editor
           </h3>
-          <button onClick={onClose} className="p-1 rounded hover:bg-white/10 transition-colors"
-            style={{ color: 'var(--color-text-secondary)' }}
+          <button 
+            onClick={onClose} 
+            className="p-1.5 rounded-lg hover:bg-bg-elevated text-text-secondary transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-5">
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--color-text-secondary)' }}>
+            <label className="block text-sm font-medium text-text-secondary mb-2">
               Title
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full rounded-lg border outline-none focus:ring-1 transition-all"
-              style={{
-                backgroundColor: 'var(--color-bg-secondary)',
-                borderColor: 'var(--color-border-medium)',
-                color: 'var(--color-text-primary)',
-                padding: '10px 12px',
-                fontSize: '14px',
-              }}
+              className="w-full h-10 px-3 rounded-lg bg-bg-secondary border border-border-medium text-text-primary placeholder-text-tertiary focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary transition-all text-sm"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--color-text-secondary)' }}>
+            <label className="block text-sm font-medium text-text-secondary mb-2">
               Status
             </label>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               {statusOptions.map((option) => {
                 const Icon = option.icon;
+                const isActive = status === option.value;
                 return (
                   <button
                     key={option.value}
                     type="button"
                     onClick={() => setStatus(option.value)}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all ${
-                      status === option.value
-                        ? 'ring-1 bg-accent-primary/10 border-accent-primary'
-                        : 'hover:bg-bg-elevated'
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm font-medium transition-all ${
+                      isActive
+                        ? 'bg-accent-primary/10 border-accent-primary text-accent-primary ring-1 ring-accent-primary'
+                        : 'bg-bg-secondary border-border-medium text-text-secondary hover:bg-bg-elevated hover:text-text-primary'
                     }`}
-                    style={{
-                      borderColor: status === option.value ? 'var(--color-accent-primary)' : 'var(--color-border-medium)',
-                      color: status === option.value ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
-                    }}
                   >
-                    <Icon className={`w-4 h-4 ${option.color}`} />
-                    <span className="text-sm">{option.label}</span>
+                    <Icon className="w-4 h-4" />
+                    {option.label}
                   </button>
                 );
               })}
@@ -149,38 +134,28 @@ export const TaskEditorPanel: React.FC<TaskEditorPanelProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--color-text-secondary)' }}>
+            <label className="block text-sm font-medium text-text-secondary mb-2">
               Description
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
-              className="w-full rounded-lg border outline-none focus:ring-1 resize-y"
-              style={{
-                backgroundColor: 'var(--color-bg-secondary)',
-                borderColor: 'var(--color-border-medium)',
-                color: 'var(--color-text-primary)',
-                padding: '10px 12px',
-                fontSize: '14px',
-                minHeight: '80px',
-              }}
+              className="w-full px-3 py-2 rounded-lg bg-bg-secondary border border-border-medium text-text-primary placeholder-text-tertiary focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary transition-all resize-y text-sm min-h-[80px]"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+            <label className="block text-sm font-medium text-text-secondary mb-2">
               Linked Document
             </label>
             {linkedDoc ? (
-              <div className="flex items-center gap-2 p-3 rounded-lg border"
-                style={{ backgroundColor: 'var(--color-bg-secondary)', borderColor: 'var(--color-border-medium)' }}
-              >
-                <FileText className="w-4 h-4" style={{ color: 'var(--color-accent-primary)' }} />
-                <span className="text-sm flex-1" style={{ color: 'var(--color-text-primary)' }}>{linkedDoc.title}</span>
-                <button onClick={() => setLinkedDocumentId(null)}
-                  className="p-1 rounded hover:bg-accent-danger/20 transition-colors"
-                  style={{ color: 'var(--color-text-tertiary)' }}
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-bg-secondary border border-border-medium">
+                <FileText className="w-4 h-4 text-accent-primary" />
+                <span className="text-sm text-text-primary flex-1 truncate">{linkedDoc.title}</span>
+                <button 
+                  onClick={() => setLinkedDocumentId(null)}
+                  className="p-1 rounded hover:bg-accent-danger/20 text-text-tertiary hover:text-accent-danger transition-colors"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -188,18 +163,17 @@ export const TaskEditorPanel: React.FC<TaskEditorPanelProps> = ({
             ) : (
               <div className="space-y-1">
                 {documents.length === 0 ? (
-                  <div className="text-sm py-2" style={{ color: 'var(--color-text-tertiary)' }}>No documents available</div>
+                  <div className="text-sm text-text-tertiary py-2">No documents available</div>
                 ) : (
                   documents.slice(0, 5).map((doc) => (
                     <button
                       key={doc.id}
                       type="button"
                       onClick={() => setLinkedDocumentId(doc.id)}
-                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors hover:bg-bg-elevated"
-                      style={{ color: 'var(--color-text-secondary)' }}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-text-secondary hover:bg-bg-elevated hover:text-text-primary transition-colors text-sm"
                     >
-                      <FileText className="w-4 h-4" style={{ color: 'var(--color-text-tertiary)' }} />
-                      <span className="text-sm truncate">{doc.title}</span>
+                      <FileText className="w-4 h-4 text-text-tertiary" />
+                      <span className="truncate">{doc.title}</span>
                     </button>
                   ))
                 )}
@@ -211,12 +185,7 @@ export const TaskEditorPanel: React.FC<TaskEditorPanelProps> = ({
             <button
               type="button"
               onClick={handleDelete}
-              className="px-4 py-2.5 rounded-lg border font-medium transition-colors flex items-center gap-2"
-              style={{
-                borderColor: 'var(--color-accent-danger)',
-                color: 'var(--color-accent-danger)',
-                backgroundColor: 'transparent',
-              }}
+              className="px-4 py-2.5 rounded-lg border border-accent-danger text-accent-danger font-medium hover:bg-accent-danger/10 transition-colors flex items-center gap-2 text-sm"
             >
               <Trash2 className="w-4 h-4" />
               Delete
@@ -225,12 +194,7 @@ export const TaskEditorPanel: React.FC<TaskEditorPanelProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-lg border font-medium transition-colors"
-              style={{
-                borderColor: 'var(--color-border-medium)',
-                color: 'var(--color-text-secondary)',
-                backgroundColor: 'transparent',
-              }}
+              className="px-4 py-2.5 rounded-lg border border-border-medium text-text-secondary font-medium hover:bg-bg-elevated hover:text-text-primary transition-colors text-sm"
             >
               Cancel
             </button>
@@ -238,11 +202,7 @@ export const TaskEditorPanel: React.FC<TaskEditorPanelProps> = ({
               type="button"
               onClick={handleSave}
               disabled={saving}
-              className="px-4 py-2.5 rounded-lg font-medium transition-all disabled:opacity-50 flex items-center gap-2"
-              style={{
-                backgroundColor: 'var(--color-accent-primary)',
-                color: 'white',
-              }}
+              className="px-4 py-2.5 rounded-lg bg-accent-primary text-white font-medium hover:bg-accent-primary/90 disabled:opacity-50 transition-all flex items-center gap-2 text-sm"
             >
               <Save className="w-4 h-4" />
               {saving ? 'Saving...' : 'Save'}
