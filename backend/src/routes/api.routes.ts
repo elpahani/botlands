@@ -321,4 +321,64 @@ router.put('/workland-tasks/:id/status', (req, res) => {
     }
 });
 
+// VM Land — execution endpoints
+router.post('/vm/execute', async (req, res) => {
+    try {
+        const { taskId, scriptContent, machineType, timeoutMs, memoryLimit, networkEnabled } = req.body;
+        const task = storageService.getTask(taskId);
+        if (!task) {
+            res.status(404).json({ error: 'Task not found' });
+            return;
+        }
+
+        const { spawnVM } = await import('../vm/engine.js');
+        const execution = await spawnVM({
+            task,
+            scriptContent,
+            machineType,
+            timeoutMs,
+            memoryLimit,
+            networkEnabled,
+        });
+
+        // Update task with execution reference
+        task.executionId = execution.id;
+        task.updatedAt = new Date().toISOString();
+
+        res.json(execution);
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+router.get('/vm/executions', async (req, res) => {
+    try {
+        const { getRunningExecutions } = await import('../vm/engine.js');
+        const running = getRunningExecutions();
+        res.json(running);
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+router.get('/vm/executions/:id/logs', async (req, res) => {
+    try {
+        const { getExecutionLogs } = await import('../vm/engine.js');
+        const logs = getExecutionLogs(req.params.id);
+        res.json({ logs });
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+router.post('/vm/executions/:id/stop', async (req, res) => {
+    try {
+        const { stopVM } = await import('../vm/engine.js');
+        await stopVM(req.params.id);
+        res.json({ success: true });
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 export default router;

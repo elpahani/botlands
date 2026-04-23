@@ -31,6 +31,8 @@ export interface Task {
     assignee?: string;
     createdAt?: string;
     updatedAt?: string;
+    scriptContent?: string;
+    executionId?: string;
 }
 
 export interface Scenario {

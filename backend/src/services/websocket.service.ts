@@ -20,6 +20,12 @@ export class WebSocketService {
         });
     }
 
+    broadcast(event: string, data?: any) {
+        if (this.io) {
+            this.io.emit(event, data);
+        }
+    }
+
     broadcastUpdate() {
         if (this.io) {
             this.io.emit('workspace_updated');

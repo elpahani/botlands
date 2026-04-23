@@ -306,6 +306,14 @@ export class StorageService {
         return Object.values(this.readDB().tasks);
     }
 
+    getTask(id: string): Task | undefined {
+        return this.readDB().tasks[id];
+    }
+
+    getScenario(id: string): import('../models/types.js').Scenario | undefined {
+        return this.readDB().scenarios?.[id];
+    }
+
     createTask(title: string, status: Task['status'], time: string, date: string, description: string, scenarioId?: string, linkedDocumentId?: string, assignee?: string): Task {
         const db = this.readDB();
         const id = uuidv4();

@@ -8,8 +8,12 @@ services:
       - "3001:3001"
     volumes:
       - ${WORKSPACE_PATH:-./data}:/app/data
+      - vmland:/app/vmland
+    cap_add:
+      - SYS_ADMIN
     environment:
       - DATA_DIR=/app/data
+      - VM_BASE_PATH=/app/vmland
       - NODE_ENV=production
       - OLLAMA_HOST=${OLLAMA_HOST:-http://ollama:11434}
       - OCR_SERVICE_URL=http://ocr-service:8000
@@ -52,6 +56,9 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+
+volumes:
+  vmland:
 
 networks:
   botlands:
