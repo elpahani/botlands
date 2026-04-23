@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { GripVertical, FileText, Image, File, Bot, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { GripVertical, FileText, Bot, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import type { Task } from '../../types/index.js';
 
 interface TaskCardProps {
@@ -39,11 +39,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdate }) => {
     error: 'border-accent-danger',
   };
 
-  const getFileIcon = (ext?: string) => {
-    if (!ext) return <File className="w-4 h-4" />;
-    if (['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext)) return <Image className="w-4 h-4" />;
-    return <FileText className="w-4 h-4" />;
-  };
 
   return (
     <div
@@ -81,10 +76,15 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdate }) => {
 
           {/* Linked Document */}
           {task.linkedDocumentId && (
-            <div className="flex items-center gap-2 p-2 rounded bg-bg-elevated">
-              {getFileIcon(task.linkedDocumentId?.slice(-4))}
-              <span className="text-xs text-text-secondary truncate">{task.linkedDocumentId}</span>
-            </div>
+            <a 
+              href={`/documents/${task.linkedDocumentId}`}
+              className="flex items-center gap-2 p-2 rounded bg-bg-elevated hover:bg-bg-secondary transition-colors group"
+            >
+              <FileText className="w-4 h-4 text-accent-primary" />
+              <span className="text-xs text-text-secondary truncate group-hover:text-accent-primary transition-colors">
+                Open linked document
+              </span>
+            </a>
           )}
 
           {/* Assignee & Meta */}

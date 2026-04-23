@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { FolderKanban, Plus, Play, CheckCircle, AlertCircle, Clock } from 'lucide-react';
+import { FolderKanban, Plus, Play, CheckCircle, AlertCircle, Clock, ListTodo } from 'lucide-react';
 import axios from 'axios';
-import type { Scenario, Task } from '../../types/index.js';
+import type { Scenario, Task, Document } from '../../types/index.js';
 import { ScenarioSidebar } from './ScenarioSidebar.js';
 import { KanbanBoard } from './KanbanBoard.js';
 import { CreateScenarioModal } from './CreateScenarioModal.js';
+import { CreateTaskModal } from './CreateTaskModal.js';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
@@ -13,6 +14,8 @@ export const WorklandTab: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [selectedScenario, setSelectedScenario] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,12 +24,14 @@ export const WorklandTab: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const [scenariosRes, tasksRes] = await Promise.all([
+      const [scenariosRes, tasksRes, docsRes] = await Promise.all([
         axios.get(`${API_BASE}/scenarios`),
-        axios.get(`${API_BASE}/workland-tasks`)
+        axios.get(`${API_BASE}/workland-tasks`),
+        axios.get(`${API_BASE}/documents`)
       ]);
       setScenarios(scenariosRes.data);
       setTasks(tasksRes.data);
+      setDocuments(docsRes.data);
     } catch (e) {
       console.error('Failed to load workland data:', e);
     } finally {
@@ -81,13 +86,28 @@ export const WorklandTab: React.FC = () => {
               <span className="flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {taskCounts.error}</span>
             </div>
           </div>
-          <button 
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-1 px-3 py-1 text-xs bg-accent-primary text-text-inverse rounded-md hover:brightness-110"
-          >
-            <Plus className="w-3 h-3" />
-            New Task
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => {
+                if (!selectedScenario) {
+                  alert('Select a scenario first');
+                  return;
+                }
+                setShowTaskModal(true);
+              }}
+              className="flex items-center gap-1 px-3 py-1 text-xs bg-accent-primary text-text-inverse rounded-md hover:brightness-110"
+            >
+              <ListTodo className="w-3 h-3" />
+              New Task
+            </button>
+            <button 
+              onClick={() => setShowCreateModal(true)}
+              className="flex items-center gap-1 px-3 py-1 text-xs bg-bg-tertiary text-text-primary rounded-md hover:bg-bg-elevated border border-border-medium"
+            >
+              <Plus className="w-3 h-3" />
+              Scenario
+            </button>
+          </div>
         </div>
 
         <KanbanBoard tasks={filteredTasks} onUpdate={loadData} />
@@ -96,6 +116,15 @@ export const WorklandTab: React.FC = () => {
       {showCreateModal && (
         <CreateScenarioModal 
           onClose={() => setShowCreateModal(false)}
+          onCreate={loadData}
+        />
+      )}
+
+      {showTaskModal && selectedScenario && (
+        <CreateTaskModal
+          scenarioId={selectedScenario}
+          documents={documents}
+          onClose={() => setShowTaskModal(false)}
           onCreate={loadData}
         />
       )}
