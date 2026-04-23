@@ -170,7 +170,7 @@ function App() {
             <div className="h-9 flex items-end shrink-0 z-20 select-none overflow-x-auto no-scrollbar bg-bg-secondary border-b border-border-medium">
                 <button 
                     onClick={() => setActiveTab('docland')}
-                    className={`h-9 px-3 text-sm flex items-center gap-2 min-w-[150px] max-w-[200px] transition-none group cursor-pointer border-r border-border-medium ${
+                    className={`h-[35px] px-3 text-[13px] flex items-center gap-2 min-w-[150px] max-w-[200px] transition-none group cursor-pointer border-r border-border-medium ${
                         activeTab === 'docland' 
                             ? 'bg-bg-secondary text-text-primary border-b border-b-transparent' 
                             : 'bg-bg-secondary text-text-secondary hover:bg-bg-elevated hover:text-text-primary border-b border-b-transparent'
@@ -184,7 +184,7 @@ function App() {
                 </button>
                 <button 
                     onClick={() => setActiveTab('timeland')}
-                    className={`h-9 px-3 text-sm flex items-center gap-2 min-w-[150px] max-w-[200px] transition-none group cursor-pointer border-r border-border-medium ${
+                    className={`h-[35px] px-3 text-[13px] flex items-center gap-2 min-w-[150px] max-w-[200px] transition-none group cursor-pointer border-r border-border-medium ${
                         activeTab === 'timeland' 
                             ? 'bg-bg-secondary text-text-primary border-b border-b-transparent' 
                             : 'bg-bg-secondary text-text-secondary hover:bg-bg-elevated hover:text-text-primary border-b border-b-transparent'
