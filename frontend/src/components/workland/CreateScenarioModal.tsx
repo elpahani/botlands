@@ -43,8 +43,8 @@ export const CreateScenarioModal: React.FC<CreateScenarioModalProps> = ({
         color: COLORS[colorIdx].name,
       });
       console.log('[CreateScenario] Success:', response.data);
-      onClose();  // Закрываем ПЕРВЫМ
-      onCreate(); // Потом обновляем данные
+      await onCreate(); // Сначала обновляем данные
+      onClose();        // Потом закрываем модалку
     } catch (err) {
       console.error('[CreateScenario] Failed:', err);
       alert('Failed to create scenario');
