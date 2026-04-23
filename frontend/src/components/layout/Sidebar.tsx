@@ -75,8 +75,8 @@ export function Sidebar({
     return (
         <div className="bg-bg-secondary border-r border-border-medium flex flex-col shrink-0"
             style={{ width: 'var(--theme-sidebar-width, 256px)' }}>
-            <div className="p-4 border-b border-border-medium bg-bg-secondary">
-                <h1 className="text-xl font-black bg-gradient-to-br from-indigo-600 to-violet-600 bg-clip-text text-transparent tracking-tight">DocLand</h1>
+            <div className="h-9 border-b border-border-medium bg-bg-secondary flex items-center px-3 shrink-0">
+                <h1 className="text-sm font-medium text-text-primary tracking-tight">Docland</h1>
             </div>
             
             <div className="flex-1 overflow-y-auto p-3 space-y-6">
