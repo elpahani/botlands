@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import { z } from 'zod';
+import { vmMcpTools } from '../vm/mcp-tools.js';
 import { storageService, INBOX_FOLDER_ID, STORAGE_FOLDER_ID } from './storage.service.js';
 import { logAction, getRecentLogs } from '../logger.js';
 import { wsService } from './websocket.service.js';
@@ -288,6 +289,19 @@ export class MCPService {
         );
 
         pluginManager.initializeMcpTools(mcpServer, () => wsService.broadcastUpdate());
+
+        // Register VM MCP tools
+        for (const tool of vmMcpTools) {
+            mcpServer.tool(
+                tool.name,
+                tool.description,
+                tool.schema.shape,
+                async (params: any) => {
+                    const result = await tool.handler(params);
+                    return result;
+                }
+            );
+        }
     }
 
     async handleSseConnection(req: Request, res: Response) {
