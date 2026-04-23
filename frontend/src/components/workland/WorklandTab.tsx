@@ -58,6 +58,7 @@ export const WorklandTab: React.FC = () => {
     <div className="h-full flex">
       <ScenarioSidebar 
         scenarios={scenarios}
+        tasks={tasks}
         selectedScenario={selectedScenario}
         onSelect={setSelectedScenario}
         onCreate={() => setShowCreateModal(true)}
