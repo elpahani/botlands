@@ -87,7 +87,7 @@ export const CreateScenarioModal: React.FC<CreateScenarioModalProps> = ({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter scenario title..."
-              className="w-full px-3 py-2 rounded-lg bg-bg-secondary border border-border-medium text-text-primary placeholder-text-tertiary focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary transition-all"
+              className="w-full h-9 px-3 py-2 rounded-lg bg-bg-secondary border border-border-medium text-text-primary placeholder-text-tertiary focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary transition-all"
               autoFocus
             />
           </div>
@@ -101,7 +101,7 @@ export const CreateScenarioModal: React.FC<CreateScenarioModalProps> = ({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe the scenario..."
               rows={3}
-              className="w-full px-3 py-2 rounded-lg bg-bg-secondary border border-border-medium text-text-primary placeholder-text-tertiary focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary transition-all resize-none"
+              className="w-full min-h-[80px] px-3 py-2 rounded-lg bg-bg-secondary border border-border-medium text-text-primary placeholder-text-tertiary focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary transition-all resize-none"
             />
           </div>
 
