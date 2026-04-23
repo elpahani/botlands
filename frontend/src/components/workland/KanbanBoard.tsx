@@ -6,6 +6,7 @@ import { TaskCard } from './TaskCard.js';
 interface KanbanBoardProps {
   tasks: Task[];
   onUpdate: () => void;
+  onEditTask?: (task: Task) => void;
 }
 
 const columns = [
@@ -16,7 +17,7 @@ const columns = [
   { id: 'error', label: 'Error', icon: AlertCircle, color: 'text-accent-danger', statuses: ['error', 'failed'] },
 ];
 
-export const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, onUpdate }) => {
+export const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, onUpdate, onEditTask }) => {
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
 
   const handleDragOver = (e: React.DragEvent, columnId: string) => {
@@ -84,6 +85,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, onUpdate }) => 
                     key={task.id} 
                     task={task} 
                     onUpdate={onUpdate}
+                    onEdit={onEditTask}
                   />
                 ))}
                 

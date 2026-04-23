@@ -6,6 +6,7 @@ import { ScenarioSidebar } from './ScenarioSidebar.js';
 import { KanbanBoard } from './KanbanBoard.js';
 import { CreateScenarioModal } from './CreateScenarioModal.js';
 import { CreateTaskModal } from './CreateTaskModal.js';
+import { TaskEditorPanel } from './TaskEditorPanel.js';
 
 
 export const WorklandTab: React.FC = () => {
@@ -15,6 +16,7 @@ export const WorklandTab: React.FC = () => {
   const [selectedScenario, setSelectedScenario] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -126,8 +128,17 @@ export const WorklandTab: React.FC = () => {
           </div>
         </div>
 
-        <KanbanBoard tasks={filteredTasks} onUpdate={loadData} />
+        <KanbanBoard tasks={filteredTasks} onUpdate={loadData} onEditTask={setEditingTask} />
       </div>
+
+      {editingTask && (
+        <TaskEditorPanel
+          task={editingTask}
+          documents={documents}
+          onClose={() => setEditingTask(null)}
+          onUpdate={loadData}
+        />
+      )}
 
       {showCreateModal && (
         <CreateScenarioModal 

@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { GripVertical, FileText, Bot, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { GripVertical, FileText, Bot, Trash2, ChevronDown, ChevronUp, Edit3 } from 'lucide-react';
 import type { Task } from '../../types/index.js';
 
 interface TaskCardProps {
   task: Task;
   onUpdate: () => void;
+  onEdit?: (task: Task) => void;
 }
 
-export const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdate }) => {
+export const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdate, onEdit }) => {
   const [expanded, setExpanded] = useState(false);
   const [dragging, setDragging] = useState(false);
 
@@ -65,6 +66,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdate }) => {
         >
           {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
         </button>
+        {onEdit && (
+          <button
+            onClick={() => onEdit(task)}
+            className="p-0.5 rounded hover:bg-bg-elevated text-text-tertiary shrink-0"
+          >
+            <Edit3 className="w-3 h-3" />
+          </button>
+        )}
       </div>
 
       {/* Expanded Content */}
