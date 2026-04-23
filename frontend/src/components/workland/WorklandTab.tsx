@@ -7,15 +7,14 @@ import { KanbanBoard } from './KanbanBoard.js';
 import { CreateScenarioModal } from './CreateScenarioModal.js';
 import { CreateTaskModal } from './CreateTaskModal.js';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 export const WorklandTab: React.FC = () => {
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [documents, setDocuments] = useState<Document[]>([]);
   const [selectedScenario, setSelectedScenario] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
-  const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,21 +22,35 @@ export const WorklandTab: React.FC = () => {
   }, []);
 
   const loadData = async () => {
+    console.log('[Workland] loadData START');
+    setLoading(true);
     try {
-      const [scenariosRes, tasksRes, docsRes] = await Promise.all([
-        axios.get(`${API_BASE}/scenarios`),
-        axios.get(`${API_BASE}/tasks`),
-        axios.get(`${API_BASE}/documents`)
-      ]);
-      console.log('[Workland] Scenarios:', scenariosRes.data.length, scenariosRes.data.map((s: any) => s.title));
-      console.log('[Workland] Tasks:', tasksRes.data.length, tasksRes.data.map((t: any) => ({ title: t.title, scenarioId: t.scenarioId })));
+      console.log('[Workland] Fetching scenarios...');
+      const scenariosRes = await axios.get('/api/scenarios');
+      console.log('[Workland] Scenarios received:', scenariosRes.data.length);
+      
+      console.log('[Workland] Fetching tasks...');
+      const tasksRes = await axios.get('/api/tasks');
+      console.log('[Workland] Tasks received:', tasksRes.data.length);
+      
       setScenarios(scenariosRes.data);
       setTasks(tasksRes.data);
-      setDocuments(docsRes.data);
+      console.log('[Workland] State updated with', scenariosRes.data.length, 'scenarios');
+      
+      // Documents — опционально, не ломаем UI если упало
+      try {
+        console.log('[Workland] Fetching documents...');
+        const docsRes = await axios.get('/api/documents');
+        console.log('[Workland] Documents received:', docsRes.data?.length || 0);
+        setDocuments(docsRes.data?.documents || []);
+      } catch (docErr) {
+        console.warn('[Workland] Documents fetch failed:', docErr);
+      }
     } catch (e) {
-      console.error('Failed to load workland data:', e);
+      console.error('[Workland] loadData ERROR:', e);
     } finally {
       setLoading(false);
+      console.log('[Workland] loadData END');
     }
   };
 
