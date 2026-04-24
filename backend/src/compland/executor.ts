@@ -86,6 +86,12 @@ export async function runProgram(program: ComplandProgram): Promise<ExecutionRes
 
   // Run the program in background
   runCode(program, programPath, venvPath, entryPath, result, logPath);
+  
+  // Emit started event for real-time updates
+  complandEventEmitter.emit('comp:started', {
+    programId: program.id,
+    programName: program.name,
+  });
 
   return result;
 }

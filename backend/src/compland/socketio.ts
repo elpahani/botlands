@@ -32,5 +32,20 @@ export function initializeComplandSocketIO(io: SocketIOServer) {
       status: data.status,
       exitCode: data.exitCode,
     });
+    // Also broadcast to all clients for process list updates
+    complandNamespace.emit('processUpdate', {
+      type: 'stopped',
+      programId: data.programId,
+      status: data.status,
+    });
+  });
+
+  // Listen for process starts
+  complandEventEmitter.on('comp:started', (data: { programId: string; programName: string }) => {
+    complandNamespace.emit('processUpdate', {
+      type: 'started',
+      programId: data.programId,
+      programName: data.programName,
+    });
   });
 }

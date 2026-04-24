@@ -15,8 +15,8 @@ export default function ComplandTerminal({ programId, initialLogs = '', logs = '
   const terminalRef = useRef<HTMLDivElement>(null);
   const xtermRef = useRef<Terminal | null>(null);
   const socketRef = useRef<Socket | null>(null);
+  const currentProgramRef = useRef<string | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
-  const lastLogsRef = useRef<string>('');
 
   // Init terminal once
   useEffect(() => {
@@ -72,76 +72,86 @@ export default function ComplandTerminal({ programId, initialLogs = '', logs = '
     };
   }, []);
 
-  // Display logs when switching between processes
+  // Handle programId changes - cleanup and reconnect
   useEffect(() => {
-    if (xtermRef.current && logs !== lastLogsRef.current) {
-      lastLogsRef.current = logs;
-      xtermRef.current.clear();
-      if (logs) {
-        xtermRef.current.write(logs);
-      } else if (initialLogs) {
-        xtermRef.current.writeln(initialLogs);
-      } else if (programId) {
-        xtermRef.current.writeln(`\x1b[38;2;0;255;136mℹ\x1b[0m Connected to ${programId.slice(0, 8)}...`);
-      } else {
-        xtermRef.current.writeln('\x1b[38;2;0;255;136mℹ\x1b[0m Select a process to view logs');
+    // If no programId, just show initial message
+    if (!programId) {
+      if (xtermRef.current) {
+        xtermRef.current.clear();
+        if (initialLogs) {
+          xtermRef.current.write(initialLogs);
+        } else {
+          xtermRef.current.writeln('\x1b[38;2;0;255;136mℹ\x1b[0m Select a process to view logs');
+        }
       }
-    }
-  }, [logs, initialLogs, programId]);
-
-  // Socket.io connection for live logs
-  useEffect(() => {
-    if (!programId || !xtermRef.current) return;
-
-    // Don't reconnect if already connected to same program
-    if (socketRef.current?.connected) {
       return;
     }
 
-    // Close old connection
-    if (socketRef.current) {
-      socketRef.current.disconnect();
+    // If switching to a different program, clear and reconnect
+    if (currentProgramRef.current !== programId) {
+      currentProgramRef.current = programId;
+      
+      if (xtermRef.current) {
+        xtermRef.current.clear();
+        xtermRef.current.writeln(`\x1b[38;2;0;255;136mℹ\x1b[0m Connected to ${programId.slice(0, 8)}...`);
+      }
+
+      // Disconnect old socket
+      if (socketRef.current) {
+        socketRef.current.emit('unsubscribe', socketRef.current.io.opts.query?.programId);
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+
+      // Connect new socket
+      const socket = io('/compland', {
+        transports: ['websocket', 'polling'],
+      });
+
+      socket.on('connect', () => {
+        console.log('[Socket.io] Connected to', programId);
+        socket.emit('subscribe', programId);
+      });
+
+      socket.on('log', (text: string) => {
+        if (xtermRef.current) {
+          xtermRef.current.write(text);
+        }
+        if (onLog) {
+          onLog(text);
+        }
+      });
+
+      socket.on('completed', (data: { status: string; exitCode: number }) => {
+        if (xtermRef.current) {
+          xtermRef.current.writeln(`\n\x1b[38;2;255;68;68mProcess completed with status: ${data.status}\x1b[0m`);
+        }
+      });
+
+      socket.on('disconnect', () => {
+        console.log('[Socket.io] Disconnected');
+      });
+
+      socket.on('connect_error', (err) => {
+        console.error('[Socket.io] Connection error:', err.message);
+      });
+
+      socketRef.current = socket;
+
+      return () => {
+        socket.emit('unsubscribe', programId);
+        socket.disconnect();
+      };
     }
+  }, [programId]);
 
-    const socket = io('/compland', {
-      transports: ['websocket', 'polling'],
-    });
-
-    socket.on('connect', () => {
-      console.log('[Socket.io] Connected to', programId);
-      socket.emit('subscribe', programId);
-    });
-
-    socket.on('log', (text: string) => {
-      if (xtermRef.current) {
-        xtermRef.current.write(text);
-      }
-      if (onLog) {
-        onLog(text);
-      }
-    });
-
-    socket.on('completed', (data: { status: string; exitCode: number }) => {
-      if (xtermRef.current) {
-        xtermRef.current.writeln(`\n\x1b[38;2;255;68;68mProcess completed with status: ${data.status}\x1b[0m`);
-      }
-    });
-
-    socket.on('disconnect', () => {
-      console.log('[Socket.io] Disconnected');
-    });
-
-    socket.on('connect_error', (err) => {
-      console.error('[Socket.io] Connection error:', err.message);
-    });
-
-    socketRef.current = socket;
-
-    return () => {
-      socket.emit('unsubscribe', programId);
-      socket.disconnect();
-    };
-  }, [programId, onLog]);
+  // Display accumulated logs when switching
+  useEffect(() => {
+    if (xtermRef.current && logs) {
+      xtermRef.current.clear();
+      xtermRef.current.write(logs);
+    }
+  }, [logs]);
 
   return (
     <div

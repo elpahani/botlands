@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
+import { io } from 'socket.io-client';
 import { Play, Plus, Folder, FileCode, Terminal, Cpu, Square, Activity } from 'lucide-react';
 import ComplandTerminal from './ComplandTerminal';
 
@@ -184,6 +185,44 @@ export const ComplandTab: React.FC = () => {
       loadRunning();
     }
   }, [viewMode, loadRunning]);
+
+  // Socket.io for real-time process list updates
+  useEffect(() => {
+    const socket = io('/compland', {
+      transports: ['websocket', 'polling'],
+    });
+
+    socket.on('connect', () => {
+      console.log('[Socket.io] Connected for process list');
+    });
+
+    socket.on('processUpdate', (data: { type: string; programId: string; programName?: string; status?: string }) => {
+      if (data.type === 'started') {
+        setRunningProcesses(prev => {
+          if (prev.find(p => p.programId === data.programId)) return prev;
+          return [...prev, {
+            programId: data.programId,
+            programName: data.programName || 'Unknown',
+            status: 'running',
+            stdout: '',
+            stderr: '',
+            startedAt: new Date().toISOString(),
+          }];
+        });
+      } else if (data.type === 'stopped') {
+        setRunningProcesses(prev => prev.filter(p => p.programId !== data.programId));
+        delete processLogsRef.current[data.programId];
+      }
+    });
+
+    socket.on('disconnect', () => {
+      console.log('[Socket.io] Disconnected from process list');
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   // Poll logs for SELECTED process only
   useEffect(() => {
