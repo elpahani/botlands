@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import multer from 'multer';
 import path from 'path';
-import fs from 'fs';
+import { join } from 'path';
+import fs, { readFileSync } from 'fs';
 import { storageService, INBOX_FOLDER_ID } from '../services/storage.service.js';
 import { wsService } from '../services/websocket.service.js';
 import { logAction } from '../logger.js';
@@ -9,7 +10,7 @@ import { pluginManager } from '../plugins/index.js';
 
 const router = Router();
 
-const tempUploadDir = path.join(process.cwd(), 'temp_uploads');
+const tempUploadDir = join(process.cwd(), 'temp_uploads');
 if (!fs.existsSync(tempUploadDir)) fs.mkdirSync(tempUploadDir, { recursive: true });
 
 const upload = multer({ 
@@ -373,7 +374,9 @@ router.post('/comp/tasks/:id/stop', (req, res) => {
 
 import { listPrograms, getProgram, createProgram, deleteProgram, renameProgram } from '../compland/project-manager.js';
 import { readProgramFile, writeProgramFile, deleteProgramFile } from '../compland/file-service.js';
-import { runProgram, stopProgram, complandEventEmitter } from '../compland/executor.js';
+import { runProgram, stopProgram, isRunning, complandEventEmitter } from '../compland/executor.js';
+
+const COMPLAND_ROOT = process.env.COMPLAND_BASE_PATH || '/app/compland';
 
 // Compland Programs
 router.get('/comp/programs', (req, res) => {
@@ -467,6 +470,23 @@ router.post('/comp/programs/:id/stop', (req, res) => {
     try {
         const success = stopProgram(req.params.id);
         res.json({ success });
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Compland status
+router.get('/comp/programs/:id/status', (req, res) => {
+    try {
+        const program = getProgram(req.params.id);
+        if (!program) return res.status(404).json({ error: 'Program not found' });
+        const running = isRunning(req.params.id);
+        const logPath = join(COMPLAND_ROOT, req.params.id, 'compland.log');
+        let logs = '';
+        try {
+            logs = readFileSync(logPath, 'utf-8');
+        } catch { /* no log yet */ }
+        res.json({ running, logs });
     } catch (e: any) {
         res.status(500).json({ error: e.message });
     }

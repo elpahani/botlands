@@ -92,6 +92,37 @@ export const ComplandTab: React.FC = () => {
     }
   };
 
+  // Poll process status every 2 seconds
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      for (const proc of runningProcesses) {
+        try {
+          const res = await axios.get(`${API_BASE}/comp/programs/${proc.programId}/status`);
+          const data = res.data;
+          
+          // Update process status
+          setRunningProcesses(prev => prev.map(p => {
+            if (p.programId !== proc.programId) return p;
+            return {
+              ...p,
+              status: data.running ? 'running' : 'stopped',
+              stdout: data.logs || p.stdout,
+            };
+          }));
+
+          // If not running anymore, remove from active
+          if (!data.running) {
+            setRunningProcesses(prev => prev.filter(p => p.programId !== proc.programId));
+          }
+        } catch (e) {
+          // Process might have been deleted
+        }
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [runningProcesses]);
+
   const createProgram = async () => {
     if (!newProgramName.trim()) return;
     await axios.post(`${API_BASE}/comp/programs`, { name: newProgramName });
