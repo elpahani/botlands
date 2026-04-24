@@ -182,6 +182,45 @@ export const ComplandTab: React.FC = () => {
     }
   }, [viewMode, loadRunning]);
 
+  // Poll logs for SELECTED process only
+  useEffect(() => {
+    if (!selectedProcess) return;
+    
+    let timerId: ReturnType<typeof setTimeout>;
+    let isMounted = true;
+
+    const pollLogs = async () => {
+      try {
+        const res = await axios.get(`${API_BASE}/comp/programs/${selectedProcess}/status`);
+        const data = res.data;
+        
+        if (isMounted) {
+          setRunningProcesses(prev => prev.map(p => {
+            if (p.programId !== selectedProcess) return p;
+            return {
+              ...p,
+              status: data.running ? 'running' : 'stopped',
+              stdout: data.logs || p.stdout,
+            };
+          }));
+        }
+      } catch {
+        // Process might have been deleted
+      } finally {
+        if (isMounted) {
+          timerId = setTimeout(pollLogs, 5000);
+        }
+      }
+    };
+
+    pollLogs(); // Start immediately
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timerId);
+    };
+  }, [selectedProcess]);
+
   const createProgram = async () => {
     if (!newProgramName.trim()) return;
     await axios.post(`${API_BASE}/comp/programs`, { name: newProgramName });
