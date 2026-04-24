@@ -1,140 +1,110 @@
 import { z } from 'zod';
-import { storageService } from '../services/storage.service.js';
-import { spawnVM, stopVM, getExecutionLogs, getRunningExecutions } from './engine.js';
+import { createVMTask, executeTask, getTask, getTaskLogs, listTasks, stopTask } from './task-manager.js';
 
 const RunScriptSchema = z.object({
   title: z.string().describe('Task title'),
   scriptContent: z.string().describe('Script content to execute'),
-  machineType: z.enum(['python', 'node', 'rust']).default('python').describe('Machine type'),
+  language: z.enum(['python', 'node', 'rust']).default('python').describe('Language'),
   dependencies: z.array(z.string()).optional().describe('Dependencies (e.g. ["requests", "numpy>=1.20"])'),
-  timeoutMs: z.number().optional().default(30000).describe('Timeout in milliseconds'),
-  description: z.string().optional().describe('Task description'),
 });
 
 const GetLogsSchema = z.object({
-  executionId: z.string().describe('Execution ID'),
+  taskId: z.string().describe('Task ID'),
 });
 
-const ListExecutionsSchema = z.object({
-  status: z.enum(['running', 'completed', 'error', 'cancelled']).optional().describe('Filter by status'),
+const ListTasksSchema = z.object({
+  status: z.enum(['running', 'completed', 'error', 'cancelled', 'waiting']).optional().describe('Filter by status'),
 });
 
-const StopExecutionSchema = z.object({
-  executionId: z.string().describe('Execution ID to stop'),
+const StopTaskSchema = z.object({
+  taskId: z.string().describe('Task ID to stop'),
 });
-
-async function runScriptHandler(params: z.infer<typeof RunScriptSchema>) {
-  try {
-    const now = new Date().toISOString();
-    const time = now.split('T')[1]!.slice(0, 5);
-    const date = now.split('T')[0]!;
-
-    const task = storageService.createTask(
-      params.title,
-      'waiting',
-      time,
-      date,
-      params.description || `VM execution: ${params.title}`,
-    );
-
-    task.scriptContent = params.scriptContent;
-    if (params.dependencies) {
-      task.description += `\nDependencies: ${params.dependencies.join(', ')}`;
-    }
-    storageService.updateTask(task.id, task);
-
-    const execution = await spawnVM({
-      task,
-      scriptContent: params.scriptContent,
-      machineType: params.machineType,
-      timeoutMs: params.timeoutMs,
-      dependencies: params.dependencies || [],
-    });
-
-    return {
-      content: [{ type: 'text' as const, text: `Script started.\nExecution ID: ${execution.id}\nTask ID: ${task.id}\nStatus: ${execution.status}` }],
-    };
-  } catch (error: any) {
-    return {
-      content: [{ type: 'text' as const, text: `Error: ${error.message}` }],
-      isError: true,
-    };
-  }
-}
-
-async function getLogsHandler(params: z.infer<typeof GetLogsSchema>) {
-  try {
-    const logs = getExecutionLogs(params.executionId);
-    return {
-      content: [{ type: 'text' as const, text: logs || '(No logs yet)' }],
-    };
-  } catch (error: any) {
-    return {
-      content: [{ type: 'text' as const, text: `Error: ${error.message}` }],
-      isError: true,
-    };
-  }
-}
-
-async function listExecutionsHandler(params: z.infer<typeof ListExecutionsSchema>) {
-  try {
-    const executions = getRunningExecutions();
-    const filtered = params.status
-      ? executions.filter(e => e.status === params.status)
-      : executions;
-
-    const text = filtered.map(e =>
-      `[${e.status.toUpperCase()}] ${e.machineType} — ${e.id}\nStarted: ${e.startedAt || 'N/A'}\n${e.output ? 'Output: ' + e.output.substring(0, 200) + '...' : 'No output yet'}`
-    ).join('\n\n') || 'No executions found';
-
-    return {
-      content: [{ type: 'text' as const, text }],
-    };
-  } catch (error: any) {
-    return {
-      content: [{ type: 'text' as const, text: `Error: ${error.message}` }],
-      isError: true,
-    };
-  }
-}
-
-async function stopExecutionHandler(params: z.infer<typeof StopExecutionSchema>) {
-  try {
-    await stopVM(params.executionId);
-    return {
-      content: [{ type: 'text' as const, text: `Execution ${params.executionId} stopped` }],
-    };
-  } catch (error: any) {
-    return {
-      content: [{ type: 'text' as const, text: `Error: ${error.message}` }],
-      isError: true,
-    };
-  }
-}
 
 export const vmMcpTools = [
   {
     name: 'run_script' as const,
-    description: 'Run a script in an isolated VM environment (Python/Node/Rust)',
+    description: 'Run a script in VM (Python/Node/Rust)',
     schema: RunScriptSchema,
-    handler: runScriptHandler,
+    handler: async (params: z.infer<typeof RunScriptSchema>) => {
+      try {
+        const task = createVMTask(
+          params.title,
+          params.scriptContent,
+          params.language,
+          params.dependencies || []
+        );
+        await executeTask(task.id);
+        return {
+          content: [{ type: 'text' as const, text: `Task started.\nID: ${task.id}\nStatus: ${task.status}` }],
+        };
+      } catch (error: any) {
+        return {
+          content: [{ type: 'text' as const, text: `Error: ${error.message}` }],
+          isError: true,
+        };
+      }
+    },
   },
   {
-    name: 'get_execution_logs' as const,
-    description: 'Get logs from a VM execution',
+    name: 'get_task_logs' as const,
+    description: 'Get logs from a VM task',
     schema: GetLogsSchema,
-    handler: getLogsHandler,
+    handler: async (params: z.infer<typeof GetLogsSchema>) => {
+      try {
+        const logs = getTaskLogs(params.taskId);
+        return {
+          content: [{ type: 'text' as const, text: logs || '(No logs yet)' }],
+        };
+      } catch (error: any) {
+        return {
+          content: [{ type: 'text' as const, text: `Error: ${error.message}` }],
+          isError: true,
+        };
+      }
+    },
   },
   {
-    name: 'list_executions' as const,
-    description: 'List all VM executions',
-    schema: ListExecutionsSchema,
-    handler: listExecutionsHandler,
+    name: 'list_vm_tasks' as const,
+    description: 'List all VM tasks',
+    schema: ListTasksSchema,
+    handler: async (params: z.infer<typeof ListTasksSchema>) => {
+      try {
+        const tasks = listTasks();
+        const filtered = params.status
+          ? tasks.filter(e => e.status === params.status)
+          : tasks;
+
+        const text = filtered.map(e =>
+          `[${e.status.toUpperCase()}] ${e.language} — ${e.id}\nStarted: ${e.startedAt || 'N/A'}\n${e.output ? 'Output: ' + e.output.substring(0, 200) + '...' : 'No output yet'}`
+        ).join('\n\n') || 'No tasks found';
+
+        return {
+          content: [{ type: 'text' as const, text }],
+        };
+      } catch (error: any) {
+        return {
+          content: [{ type: 'text' as const, text: `Error: ${error.message}` }],
+          isError: true,
+        };
+      }
+    },
   },
   {
-    name: 'stop_execution' as const,
-    description: 'Stop a running VM execution',
-    schema: StopExecutionSchema,
-    handler: stopExecutionHandler,
+    name: 'stop_vm_task' as const,
+    description: 'Stop a running VM task',
+    schema: StopTaskSchema,
+    handler: async (params: z.infer<typeof StopTaskSchema>) => {
+      try {
+        stopTask(params.taskId);
+        return {
+          content: [{ type: 'text' as const, text: `Task ${params.taskId} stopped` }],
+        };
+      } catch (error: any) {
+        return {
+          content: [{ type: 'text' as const, text: `Error: ${error.message}` }],
+          isError: true,
+        };
+      }
+    },
   },
 ];

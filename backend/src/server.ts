@@ -4,7 +4,7 @@ import { createServer } from 'http';
 import apiRoutes from './routes/api.routes.js';
 import { wsService } from './services/websocket.service.js';
 import { mcpService } from './services/mcp.service.js';
-import { vmEventEmitter } from './vm/engine.js';
+import { vmEventEmitter } from './vm/task-manager.js';
 
 const app = express();
 app.use(cors());
@@ -27,21 +27,21 @@ const server = createServer(app);
 wsService.initialize(server);
 
 // VM EventEmitter → WebSocket bridge
-vmEventEmitter.on('vm:log', (data: { executionId: string; text: string }) => {
+vmEventEmitter.on('vm:log', (data: { taskId: string; text: string }) => {
     wsService.broadcast('vm:log', {
-        executionId: data.executionId,
+        taskId: data.taskId,
         text: data.text,
     });
 });
 
-vmEventEmitter.on('vm:completed', (execution: any) => {
-    wsService.broadcast('vm:completed', execution);
+vmEventEmitter.on('vm:completed', (task: any) => {
+    wsService.broadcast('vm:completed', task);
 });
 
-// Daily cleanup of old executions
-import { cleanupOldExecutions } from './vm/engine.js';
+// Daily cleanup of old tasks
+import { cleanupOldTasks } from './vm/task-manager.js';
 setInterval(() => {
-    cleanupOldExecutions(24);
+    cleanupOldTasks(24);
 }, 24 * 60 * 60 * 1000);
 
 const PORT = 3001;

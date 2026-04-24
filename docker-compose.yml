@@ -9,12 +9,12 @@ services:
     volumes:
       - ${WORKSPACE_PATH:-./data}:/app/data
       - vmland:/app/vmland
-    cap_add:
-      - SYS_ADMIN
-    privileged: true
     environment:
       - DATA_DIR=/app/data
       - VM_BASE_PATH=/app/vmland
+      - VM_MAX_PARALLEL=${VM_MAX_PARALLEL:-4}
+      - VM_TIMEOUT_MS=${VM_TIMEOUT_MS:-60000}
+      - VM_MEMORY_MB=${VM_MEMORY_MB:-512}
       - NODE_ENV=production
       - OLLAMA_HOST=${OLLAMA_HOST:-http://ollama:11434}
       - OCR_SERVICE_URL=http://ocr-service:8000
