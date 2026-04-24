@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { createVMTask, executeTask, getTask, getTaskLogs, listTasks, stopTask } from './task-manager.js';
+import { createCompTask, executeTask, getTask, getTaskLogs, listTasks, stopTask } from './task-manager.js';
 
 const RunScriptSchema = z.object({
   title: z.string().describe('Task title'),
@@ -27,7 +27,7 @@ export const vmMcpTools = [
     schema: RunScriptSchema,
     handler: async (params: z.infer<typeof RunScriptSchema>) => {
       try {
-        const task = createVMTask(
+        const task = createCompTask(
           params.title,
           params.scriptContent,
           params.language,

@@ -321,12 +321,12 @@ router.put('/workland-tasks/:id/status', (req, res) => {
     }
 });
 
-import { createVMTask, executeTask, getTask as getVMTask, getTaskLogs, listTasks as listVMTasks, stopTask } from '../vm/task-manager.js';
+import { createCompTask, executeTask, getTask as getCompTask, getTaskLogs, listTasks as listCompTasks, stopTask } from '../compland/task-manager.js';
 
-router.post('/vm/execute', async (req, res) => {
+router.post('/comp/execute', async (req, res) => {
     try {
         const { title, scriptContent, language, dependencies } = req.body;
-        const task = createVMTask(title, scriptContent, language, dependencies || []);
+        const task = createCompTask(title, scriptContent, language, dependencies || []);
         await executeTask(task.id);
         res.json(task);
     } catch (e: any) {
@@ -334,18 +334,18 @@ router.post('/vm/execute', async (req, res) => {
     }
 });
 
-router.get('/vm/tasks', (req, res) => {
+router.get('/comp/tasks', (req, res) => {
     try {
-        const tasks = listVMTasks();
+        const tasks = listCompTasks();
         res.json(tasks);
     } catch (e: any) {
         res.status(500).json({ error: e.message });
     }
 });
 
-router.get('/vm/tasks/:id', (req, res) => {
+router.get('/comp/tasks/:id', (req, res) => {
     try {
-        const task = getVMTask(req.params.id);
+        const task = getCompTask(req.params.id);
         if (!task) return res.status(404).json({ error: 'Task not found' });
         res.json(task);
     } catch (e: any) {
@@ -353,7 +353,7 @@ router.get('/vm/tasks/:id', (req, res) => {
     }
 });
 
-router.get('/vm/tasks/:id/logs', (req, res) => {
+router.get('/comp/tasks/:id/logs', (req, res) => {
     try {
         const logs = getTaskLogs(req.params.id);
         res.json({ logs });
@@ -362,7 +362,7 @@ router.get('/vm/tasks/:id/logs', (req, res) => {
     }
 });
 
-router.post('/vm/tasks/:id/stop', (req, res) => {
+router.post('/comp/tasks/:id/stop', (req, res) => {
     try {
         stopTask(req.params.id);
         res.json({ success: true });

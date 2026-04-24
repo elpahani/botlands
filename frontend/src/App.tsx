@@ -10,7 +10,7 @@ import { ToolsPanel } from './components/tools/ToolsPanel.js';
 import { DocumentViewerModal } from './components/preview/DocumentViewerModal.js';
 import { TimelandTab } from './components/timeland/TimelandTab.js';
 import { WorklandTab } from './components/workland/WorklandTab.js';
-import { VMLandTab } from './components/vmland/VMLandTab.js';
+import { ComplandTab } from './components/compland/ComplandTab.js';
 import { ThemeProvider } from './design-system/ThemeProvider.js';
 
 const getFileCategory = (ext: string) => {
@@ -42,7 +42,7 @@ const getFileIcon = (ext: string, className: string = "w-10 h-10 text-accent-pri
 };
 
 function App() {
-    const [activeTab, setActiveTab] = useState<'docland' | 'timeland' | 'workland' | 'vmland'>('docland');
+    const [activeTab, setActiveTab] = useState<'docland' | 'timeland' | 'workland' | 'compland'>('docland');
     const { documents, folders, currentFolderId, setCurrentFolderId, selectedDoc, setSelectedDoc, fetchWorkspace } = useWorkspace();
     const [activeDocId, setActiveDocId] = useState<string | null>(null);
     const { dragOverId, uploading, handleDragOver, handleDragLeave, handleDrop, handleDragStart, handleFileUpload } = useDragAndDrop({ fetchWorkspace, documents });
@@ -213,17 +213,17 @@ function App() {
                     }`} onClick={(e) => e.stopPropagation()} />
                 </button>
                 <button 
-                    onClick={() => setActiveTab('vmland')}
+                    onClick={() => setActiveTab('compland')}
                     className={`h-[35px] px-3 text-[13px] flex items-center gap-2 min-w-[150px] max-w-[200px] transition-none group cursor-pointer border-r border-border-medium ${
-                        activeTab === 'vmland' 
+                        activeTab === 'compland' 
                             ? 'bg-bg-secondary text-text-primary border-b border-b-transparent' 
                             : 'bg-bg-secondary text-text-secondary hover:bg-bg-elevated hover:text-text-primary border-b border-b-transparent'
                     }`}
                 >
-                    <Cpu className={`w-4 h-4 ${activeTab === 'vmland' ? 'text-text-primary' : 'text-text-tertiary'}`} /> 
-                    <span className="truncate flex-1 text-left">VMLand</span>
+                    <Cpu className={`w-4 h-4 ${activeTab === 'compland' ? 'text-text-primary' : 'text-text-tertiary'}`} /> 
+                    <span className="truncate flex-1 text-left">Compland</span>
                     <X className={`w-4 h-4 rounded-md p-0.5 transition-opacity ${
-                        activeTab === 'vmland' ? 'opacity-100 text-text-secondary hover:bg-bg-elevated' : 'opacity-0 group-hover:opacity-100 text-text-secondary hover:bg-bg-elevated'
+                        activeTab === 'compland' ? 'opacity-100 text-text-secondary hover:bg-bg-elevated' : 'opacity-0 group-hover:opacity-100 text-text-secondary hover:bg-bg-elevated'
                     }`} onClick={(e) => e.stopPropagation()} />
                 </button>
                 <div className="flex-1 bg-bg-secondary h-full"></div>
@@ -467,7 +467,7 @@ function App() {
                     </div>
                 ) : (
                     <div className="flex-1 h-full overflow-hidden">
-                        <VMLandTab />
+                        <ComplandTab />
                     </div>
                 )}
             </div>

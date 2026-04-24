@@ -4,14 +4,14 @@ import { join } from 'path';
 import { EventEmitter } from 'events';
 import { v4 as uuidv4 } from 'uuid';
 
-const VM_BASE_PATH = process.env.VM_BASE_PATH || '/app/vmland';
-const MAX_PARALLEL = parseInt(process.env.VM_MAX_PARALLEL || '4', 10);
-const TIMEOUT_MS = parseInt(process.env.VM_TIMEOUT_MS || '60000', 10);
-const MEMORY_MB = parseInt(process.env.VM_MEMORY_MB || '512', 10);
+const COMPLAND_BASE_PATH = process.env.COMPLAND_BASE_PATH || '/app/compland';
+const MAX_PARALLEL = parseInt(process.env.COMPLAND_MAX_PARALLEL || '4', 10);
+const TIMEOUT_MS = parseInt(process.env.COMPLAND_TIMEOUT_MS || '60000', 10);
+const MEMORY_MB = parseInt(process.env.COMPLAND_MEMORY_MB || '512', 10);
 
-export const vmEventEmitter = new EventEmitter();
+export const complandEventEmitter = new EventEmitter();
 
-export interface VMTask {
+export interface CompTask {
   id: string;
   title: string;
   scriptContent: string;
@@ -27,30 +27,30 @@ export interface VMTask {
   process?: ChildProcess;
 }
 
-const tasks = new Map<string, VMTask>();
+const tasks = new Map<string, CompTask>();
 let runningCount = 0;
 
 function getWorkspacePath(taskId: string, language: string): string {
-  return join(VM_BASE_PATH, `${language}-${taskId}`, 'workspace');
+  return join(COMPLAND_BASE_PATH, `${language}-${taskId}`, 'workspace');
 }
 
 function getLogFilePath(taskId: string, language: string): string {
-  return join(VM_BASE_PATH, `${language}-${taskId}`, 'logs.txt');
+  return join(COMPLAND_BASE_PATH, `${language}-${taskId}`, 'logs.txt');
 }
 
-export function createVMTask(
+export function createCompTask(
   title: string,
   scriptContent: string,
   language: 'python' | 'node' | 'rust' = 'python',
   dependencies: string[] = []
-): VMTask {
+): CompTask {
   const id = uuidv4();
   const workspacePath = getWorkspacePath(id, language);
   const logFilePath = getLogFilePath(id, language);
 
   mkdirSync(workspacePath, { recursive: true });
 
-  const task: VMTask = {
+  const task: CompTask = {
     id,
     title,
     scriptContent,
@@ -88,7 +88,7 @@ export async function executeTask(taskId: string): Promise<void> {
     if (task.language === 'python') {
       writeFileSync(join(task.workspacePath, 'requirements.txt'), task.dependencies.join('\n'));
     } else if (task.language === 'node') {
-      const pkg = { name: 'vmland-task', version: '1.0.0', dependencies: {} as Record<string, string> };
+      const pkg = { name: 'compland-task', version: '1.0.0', dependencies: {} as Record<string, string> };
       task.dependencies.forEach(dep => {
         const parts = dep.split('@');
         const name = parts[0]!;
@@ -137,7 +137,7 @@ export async function executeTask(taskId: string): Promise<void> {
       const text = logBuffer.join('');
       logBuffer.length = 0;
       appendFileSync(task.logFilePath, text);
-      vmEventEmitter.emit(`vm:log:${task.id}`, text);
+      complandEventEmitter.emit(`comp:log:${task.id}`, text);
     }
   }, 100);
 
@@ -156,7 +156,7 @@ export async function executeTask(taskId: string): Promise<void> {
       task.status = 'error';
       task.output = 'Execution timed out';
       task.completedAt = new Date().toISOString();
-      vmEventEmitter.emit(`vm:completed:${task.id}`, task);
+      complandEventEmitter.emit(`comp:completed:${task.id}`, task);
     }
   }, TIMEOUT_MS);
 
@@ -168,7 +168,7 @@ export async function executeTask(taskId: string): Promise<void> {
     if (logBuffer.length > 0) {
       const text = logBuffer.join('');
       appendFileSync(task.logFilePath, text);
-      vmEventEmitter.emit(`vm:log:${task.id}`, text);
+      complandEventEmitter.emit(`comp:log:${task.id}`, text);
     }
 
     task.exitCode = code ?? -1;
@@ -184,7 +184,7 @@ export async function executeTask(taskId: string): Promise<void> {
       }
     }
 
-    vmEventEmitter.emit(`vm:completed:${task.id}`, task);
+    complandEventEmitter.emit(`comp:completed:${task.id}`, task);
   });
 
   child.on('error', (err) => {
@@ -194,7 +194,7 @@ export async function executeTask(taskId: string): Promise<void> {
     task.status = 'error';
     task.output = err.message;
     task.completedAt = new Date().toISOString();
-    vmEventEmitter.emit(`vm:completed:${task.id}`, task);
+    complandEventEmitter.emit(`comp:completed:${task.id}`, task);
   });
 }
 
@@ -209,11 +209,11 @@ export function stopTask(taskId: string): void {
   runningCount--;
 }
 
-export function getTask(taskId: string): VMTask | undefined {
+export function getTask(taskId: string): CompTask | undefined {
   return tasks.get(taskId);
 }
 
-export function listTasks(): VMTask[] {
+export function listTasks(): CompTask[] {
   return Array.from(tasks.values());
 }
 
@@ -227,10 +227,10 @@ export function getTaskLogs(taskId: string): string {
 
 export function cleanupOldTasks(maxAgeHours: number = 24): void {
   try {
-    const dirs = readdirSync(VM_BASE_PATH);
+    const dirs = readdirSync(COMPLAND_BASE_PATH);
     const now = Date.now();
     for (const dir of dirs) {
-      const dirPath = join(VM_BASE_PATH, dir);
+      const dirPath = join(COMPLAND_BASE_PATH, dir);
       const stat = statSync(dirPath);
       const ageHours = (now - stat.mtimeMs) / (1000 * 60 * 60);
       if (ageHours > maxAgeHours) {

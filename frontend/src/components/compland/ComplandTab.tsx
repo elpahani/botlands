@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Cpu, Play, Square, Terminal, FileText } from 'lucide-react';
 
-interface VMTask {
+interface CompTask {
   id: string;
   title: string;
   language: string;
@@ -14,9 +14,9 @@ interface VMTask {
 
 const API_BASE = '/api';
 
-export const VMLandTab: React.FC = () => {
-  const [tasks, setTasks] = useState<VMTask[]>([]);
-  const [script, setScript] = useState('print("Hello from VMLand!")');
+export const ComplandTab: React.FC = () => {
+  const [tasks, setTasks] = useState<CompTask[]>([]);
+  const [script, setScript] = useState('print("Hello from CompLand!")');
   const [language, setLanguage] = useState<'python' | 'node' | 'rust'>('python');
   const [deps, setDeps] = useState('');
   const [title, setTitle] = useState('Test script');
@@ -30,7 +30,7 @@ export const VMLandTab: React.FC = () => {
 
   const loadTasks = async () => {
     try {
-      const res = await axios.get(`${API_BASE}/vm/tasks`);
+      const res = await axios.get(`${API_BASE}/comp/tasks`);
       setTasks(res.data);
     } catch {
       // ignore
@@ -40,7 +40,7 @@ export const VMLandTab: React.FC = () => {
   const handleRun = async () => {
     setLoading(true);
     try {
-      await axios.post(`${API_BASE}/vm/execute`, {
+      await axios.post(`${API_BASE}/comp/execute`, {
         title,
         scriptContent: script,
         language,
@@ -56,7 +56,7 @@ export const VMLandTab: React.FC = () => {
 
   const handleStop = async (id: string) => {
     try {
-      await axios.post(`${API_BASE}/vm/tasks/${id}/stop`);
+      await axios.post(`${API_BASE}/comp/tasks/${id}/stop`);
       loadTasks();
     } catch {
       // ignore
@@ -70,7 +70,7 @@ export const VMLandTab: React.FC = () => {
         <div className="p-3 border-b border-border-medium">
           <h2 className="text-sm font-bold text-text-primary flex items-center gap-2">
             <Cpu className="w-4 h-4" />
-            VM Land
+            Comp Land
           </h2>
         </div>
 

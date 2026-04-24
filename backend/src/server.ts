@@ -4,7 +4,7 @@ import { createServer } from 'http';
 import apiRoutes from './routes/api.routes.js';
 import { wsService } from './services/websocket.service.js';
 import { mcpService } from './services/mcp.service.js';
-import { vmEventEmitter } from './vm/task-manager.js';
+import { complandEventEmitter } from './compland/task-manager.js';
 
 const app = express();
 app.use(cors());
@@ -19,27 +19,27 @@ app.use(express.json());
 app.use('/api', apiRoutes);
 
 // Serve VM log files
-const VM_BASE_PATH = process.env.VM_BASE_PATH || '/app/vmland';
-app.use('/api/vm-logs', express.static(VM_BASE_PATH));
+const COMPLAND_BASE_PATH = process.env.COMPLAND_BASE_PATH || '/app/compland';
+app.use('/api/comp-logs', express.static(COMPLAND_BASE_PATH));
 
 // Setup Server
 const server = createServer(app);
 wsService.initialize(server);
 
-// VM EventEmitter → WebSocket bridge
-vmEventEmitter.on('vm:log', (data: { taskId: string; text: string }) => {
-    wsService.broadcast('vm:log', {
+// Comp EventEmitter → WebSocket bridge
+complandEventEmitter.on('comp:log', (data: { taskId: string; text: string }) => {
+    wsService.broadcast('comp:log', {
         taskId: data.taskId,
         text: data.text,
     });
 });
 
-vmEventEmitter.on('vm:completed', (task: any) => {
-    wsService.broadcast('vm:completed', task);
+complandEventEmitter.on('comp:completed', (task: any) => {
+    wsService.broadcast('comp:completed', task);
 });
 
 // Daily cleanup of old tasks
-import { cleanupOldTasks } from './vm/task-manager.js';
+import { cleanupOldTasks } from './compland/task-manager.js';
 setInterval(() => {
     cleanupOldTasks(24);
 }, 24 * 60 * 60 * 1000);

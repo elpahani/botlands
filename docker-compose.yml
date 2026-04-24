@@ -8,13 +8,13 @@ services:
       - "3001:3001"
     volumes:
       - ${WORKSPACE_PATH:-./data}:/app/data
-      - vmland:/app/vmland
+      - compland:/app/compland
     environment:
       - DATA_DIR=/app/data
-      - VM_BASE_PATH=/app/vmland
-      - VM_MAX_PARALLEL=${VM_MAX_PARALLEL:-4}
-      - VM_TIMEOUT_MS=${VM_TIMEOUT_MS:-60000}
-      - VM_MEMORY_MB=${VM_MEMORY_MB:-512}
+      - COMPLAND_BASE_PATH=/app/compland
+      - COMPLAND_MAX_PARALLEL=${COMPLAND_MAX_PARALLEL:-4}
+      - COMPLAND_TIMEOUT_MS=${COMPLAND_TIMEOUT_MS:-60000}
+      - COMPLAND_MEMORY_MB=${COMPLAND_MEMORY_MB:-512}
       - NODE_ENV=production
       - OLLAMA_HOST=${OLLAMA_HOST:-http://ollama:11434}
       - OCR_SERVICE_URL=http://ocr-service:8000
@@ -59,7 +59,7 @@ services:
       start_period: 60s
 
 volumes:
-  vmland:
+  compland:
 
 networks:
   botlands:
