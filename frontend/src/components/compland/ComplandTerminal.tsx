@@ -7,13 +7,16 @@ import '@xterm/xterm/css/xterm.css';
 interface ComplandTerminalProps {
   programId: string | null;
   initialLogs?: string;
+  logs?: string;
+  onLog?: (text: string) => void;
 }
 
-export default function ComplandTerminal({ programId, initialLogs = '' }: ComplandTerminalProps) {
+export default function ComplandTerminal({ programId, initialLogs = '', logs = '', onLog }: ComplandTerminalProps) {
   const terminalRef = useRef<HTMLDivElement>(null);
   const xtermRef = useRef<Terminal | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
+  const lastLogsRef = useRef<string>('');
 
   // Init terminal once
   useEffect(() => {
@@ -69,26 +72,52 @@ export default function ComplandTerminal({ programId, initialLogs = '' }: Compla
     };
   }, []);
 
-  // Socket.io connection — only for selected program
+  // Display logs when switching between processes
+  useEffect(() => {
+    if (xtermRef.current && logs !== lastLogsRef.current) {
+      lastLogsRef.current = logs;
+      xtermRef.current.clear();
+      if (logs) {
+        xtermRef.current.write(logs);
+      } else if (initialLogs) {
+        xtermRef.current.writeln(initialLogs);
+      } else if (programId) {
+        xtermRef.current.writeln(`\x1b[38;2;0;255;136mℹ\x1b[0m Connected to ${programId.slice(0, 8)}...`);
+      } else {
+        xtermRef.current.writeln('\x1b[38;2;0;255;136mℹ\x1b[0m Select a process to view logs');
+      }
+    }
+  }, [logs, initialLogs, programId]);
+
+  // Socket.io connection for live logs
   useEffect(() => {
     if (!programId || !xtermRef.current) return;
 
-    // Clear terminal for new program
-    xtermRef.current.clear();
-    xtermRef.current.writeln(`\x1b[38;2;0;255;136mℹ\x1b[0m Connected to ${programId.slice(0, 8)}...`);
+    // Don't reconnect if already connected to same program
+    if (socketRef.current?.connected) {
+      return;
+    }
+
+    // Close old connection
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+    }
 
     const socket = io('/compland', {
       transports: ['websocket', 'polling'],
     });
 
     socket.on('connect', () => {
-      console.log('[Socket.io] Connected');
+      console.log('[Socket.io] Connected to', programId);
       socket.emit('subscribe', programId);
     });
 
     socket.on('log', (text: string) => {
       if (xtermRef.current) {
         xtermRef.current.write(text);
+      }
+      if (onLog) {
+        onLog(text);
       }
     });
 
@@ -112,15 +141,7 @@ export default function ComplandTerminal({ programId, initialLogs = '' }: Compla
       socket.emit('unsubscribe', programId);
       socket.disconnect();
     };
-  }, [programId]);
-
-  // Write initial logs when no program selected
-  useEffect(() => {
-    if (xtermRef.current && initialLogs && !programId) {
-      xtermRef.current.clear();
-      xtermRef.current.writeln(initialLogs);
-    }
-  }, [initialLogs, programId]);
+  }, [programId, onLog]);
 
   return (
     <div

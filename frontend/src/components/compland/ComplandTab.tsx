@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { Play, Plus, Folder, FileCode, Terminal, Cpu, Square, Activity } from 'lucide-react';
 import ComplandTerminal from './ComplandTerminal';
@@ -34,6 +34,7 @@ export const ComplandTab: React.FC = () => {
   const [viewMode, setViewMode] = useState<'editor' | 'processes'>('editor');
   const [runningProcesses, setRunningProcesses] = useState<RunningProcess[]>([]);
   const [selectedProcess, setSelectedProcess] = useState<string | null>(null);
+  const processLogsRef = useRef<Record<string, string>>({}); // Логи по programId
 
   const loadPrograms = useCallback(async () => {
     const res = await axios.get(`${API_BASE}/comp/programs`);
@@ -88,6 +89,7 @@ export const ComplandTab: React.FC = () => {
     try {
       await axios.post(`${API_BASE}/comp/programs/${programId}/stop`);
       setRunningProcesses(prev => prev.filter(p => p.programId !== programId));
+      delete processLogsRef.current[programId]; // Очищаем логи
     } catch (e) {
       console.error('Failed to stop:', e);
     }
@@ -353,6 +355,7 @@ export const ComplandTab: React.FC = () => {
                 <ComplandTerminal 
                   programId={selectedProcess}
                   initialLogs={output || 'Click Run to execute'}
+                  logs={selectedProcess ? processLogsRef.current[selectedProcess] : ''}
                 />
               </div>
             </div>
@@ -415,6 +418,12 @@ export const ComplandTab: React.FC = () => {
                     <ComplandTerminal 
                       programId={selectedProcess}
                       initialLogs={currentProcess.stdout || ''}
+                      logs={selectedProcess ? processLogsRef.current[selectedProcess] : ''}
+                      onLog={(text) => {
+                        if (selectedProcess) {
+                          processLogsRef.current[selectedProcess] = (processLogsRef.current[selectedProcess] || '') + text;
+                        }
+                      }}
                     />
                   </div>
                 </div>
