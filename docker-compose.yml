@@ -6,6 +6,7 @@ services:
     restart: unless-stopped
     ports:
       - "3001:3001"
+      - "8080:8080"
     volumes:
       - ${WORKSPACE_PATH:-./data}:/app/data
       - compland:/app/compland

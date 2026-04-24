@@ -373,7 +373,7 @@ router.post('/comp/tasks/:id/stop', (req, res) => {
 
 import { listPrograms, getProgram, createProgram, deleteProgram, renameProgram } from '../compland/project-manager.js';
 import { readProgramFile, writeProgramFile, deleteProgramFile } from '../compland/file-service.js';
-import { runProgram, complandEventEmitter } from '../compland/executor.js';
+import { runProgram, stopProgram, complandEventEmitter } from '../compland/executor.js';
 
 // Compland Programs
 router.get('/comp/programs', (req, res) => {
@@ -452,12 +452,21 @@ router.use('/comp/programs/:id/files', (req, res) => {
 });
 
 // Compland Run
-router.post('/comp/programs/:id/run', (req, res) => {
+router.post('/comp/programs/:id/run', async (req, res) => {
     try {
         const program = getProgram(req.params.id);
         if (!program) return res.status(404).json({ error: 'Program not found' });
-        const result = runProgram(program);
+        const result = await runProgram(program);
         res.json(result);
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+router.post('/comp/programs/:id/stop', (req, res) => {
+    try {
+        const success = stopProgram(req.params.id);
+        res.json({ success });
     } catch (e: any) {
         res.status(500).json({ error: e.message });
     }
