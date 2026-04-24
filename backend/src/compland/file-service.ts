@@ -1,49 +1,36 @@
-import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync, statSync } from 'fs';
+import { writeFileSync, readFileSync, existsSync, rmSync } from 'fs';
 import { join, dirname } from 'path';
+import { mkdirSync } from 'fs';
 
-export interface VMFile {
-  name: string;
-  path: string;
-  type: 'file' | 'directory';
-  size: number;
-  modifiedAt: string;
+const COMPLAND_ROOT = process.env.COMPLAND_BASE_PATH || '/app/compland';
+
+export function getFilePath(programId: string, filePath: string): string {
+  const safePath = filePath.replace(/\.\./g, '').replace(/^\//, '');
+  return join(COMPLAND_ROOT, programId, safePath);
 }
 
-export class VMFileService {
-  listFiles(workspacePath: string, subPath: string = ''): VMFile[] {
-    const fullPath = join(workspacePath, subPath);
-    if (!existsSync(fullPath)) return [];
-
-    const entries = readdirSync(fullPath, { withFileTypes: true });
-    return entries.map(entry => {
-      const entryPath = join(subPath, entry.name);
-      const stat = statSync(join(workspacePath, entryPath));
-      return {
-        name: entry.name,
-        path: entryPath,
-        type: entry.isDirectory() ? 'directory' : 'file',
-        size: stat.size,
-        modifiedAt: stat.mtime.toISOString(),
-      };
-    });
-  }
-
-  readFile(workspacePath: string, filePath: string): string {
-    const fullPath = join(workspacePath, filePath);
-    if (!existsSync(fullPath)) throw new Error('File not found');
+export function readProgramFile(programId: string, filePath: string): string | null {
+  const fullPath = getFilePath(programId, filePath);
+  if (!existsSync(fullPath)) return null;
+  try {
     return readFileSync(fullPath, 'utf-8');
-  }
-
-  writeFile(workspacePath: string, filePath: string, content: string): void {
-    const fullPath = join(workspacePath, filePath);
-    mkdirSync(dirname(fullPath), { recursive: true });
-    writeFileSync(fullPath, content, 'utf-8');
-  }
-
-  createFolder(workspacePath: string, folderPath: string): void {
-    const fullPath = join(workspacePath, folderPath);
-    mkdirSync(fullPath, { recursive: true });
-  }
+  } catch { return null; }
 }
 
-export const vmFileService = new VMFileService();
+export function writeProgramFile(programId: string, filePath: string, content: string): boolean {
+  const fullPath = getFilePath(programId, filePath);
+  try {
+    mkdirSync(dirname(fullPath), { recursive: true });
+    writeFileSync(fullPath, content);
+    return true;
+  } catch { return false; }
+}
+
+export function deleteProgramFile(programId: string, filePath: string): boolean {
+  const fullPath = getFilePath(programId, filePath);
+  if (!existsSync(fullPath)) return false;
+  try {
+    rmSync(fullPath);
+    return true;
+  } catch { return false; }
+}

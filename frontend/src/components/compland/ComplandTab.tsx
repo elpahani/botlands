@@ -1,187 +1,205 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { Cpu, Play, Square, Terminal, FileText } from 'lucide-react';
-
-interface CompTask {
-  id: string;
-  title: string;
-  language: string;
-  status: string;
-  output: string;
-  startedAt: string | null;
-  completedAt: string | null;
-}
+import { Play, Plus, Folder, FileCode, Terminal, Cpu } from 'lucide-react';
 
 const API_BASE = '/api';
 
-export const ComplandTab: React.FC = () => {
-  const [tasks, setTasks] = useState<CompTask[]>([]);
-  const [script, setScript] = useState('print("Hello from CompLand!")');
-  const [language, setLanguage] = useState<'python' | 'node' | 'rust'>('python');
-  const [deps, setDeps] = useState('');
-  const [title, setTitle] = useState('Test script');
-  const [loading, setLoading] = useState(false);
+interface ComplandProgram {
+  id: string;
+  name: string;
+  language: string;
+  entryPoint: string;
+  files: string[];
+}
 
-  useEffect(() => {
-    loadTasks();
-    const interval = setInterval(loadTasks, 2000);
-    return () => clearInterval(interval);
+interface ExecutionResult {
+  programId: string;
+  status: string;
+  stdout: string;
+  stderr: string;
+  exitCode: number | null;
+}
+
+export const ComplandTab: React.FC = () => {
+  const [programs, setPrograms] = useState<ComplandProgram[]>([]);
+  const [selectedProgram, setSelectedProgram] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [fileContent, setFileContent] = useState<string>('');
+  const [output, setOutput] = useState<string>('');
+  const [isRunning, setIsRunning] = useState(false);
+  const [showNewProgram, setShowNewProgram] = useState(false);
+  const [newProgramName, setNewProgramName] = useState('');
+
+  const loadPrograms = useCallback(async () => {
+    const res = await axios.get(`${API_BASE}/comp/programs`);
+    setPrograms(res.data);
   }, []);
 
-  const loadTasks = async () => {
-    try {
-      const res = await axios.get(`${API_BASE}/comp/tasks`);
-      setTasks(res.data);
-    } catch {
-      // ignore
-    }
+  useEffect(() => {
+    loadPrograms();
+  }, [loadPrograms]);
+
+  const loadFile = async (programId: string, filePath: string) => {
+    const res = await axios.get(`${API_BASE}/comp/programs/${programId}/files/${filePath}`);
+    setFileContent(res.data.content);
+    setSelectedFile(filePath);
   };
 
-  const handleRun = async () => {
-    setLoading(true);
+  const saveFile = async () => {
+    if (!selectedProgram || !selectedFile) return;
+    await axios.put(`${API_BASE}/comp/programs/${selectedProgram}/files/${selectedFile}`, {
+      content: fileContent,
+    });
+  };
+
+  const runProgram = async () => {
+    if (!selectedProgram) return;
+    setIsRunning(true);
+    setOutput('Running...');
     try {
-      await axios.post(`${API_BASE}/comp/execute`, {
-        title,
-        scriptContent: script,
-        language,
-        dependencies: deps.split('\n').filter(d => d.trim()),
-      });
-      loadTasks();
-    } catch {
-      // ignore
+      const res = await axios.post(`${API_BASE}/comp/programs/${selectedProgram}/run`);
+      const result: ExecutionResult = res.data;
+      setOutput(`${result.stdout}\n${result.stderr ? '--- stderr ---\n' + result.stderr : ''}\nExit code: ${result.exitCode}`);
+    } catch (e: any) {
+      setOutput(`Error: ${e.response?.data?.error || e.message}`);
     } finally {
-      setLoading(false);
+      setIsRunning(false);
     }
   };
 
-  const handleStop = async (id: string) => {
-    try {
-      await axios.post(`${API_BASE}/comp/tasks/${id}/stop`);
-      loadTasks();
-    } catch {
-      // ignore
-    }
+  const createProgram = async () => {
+    if (!newProgramName.trim()) return;
+    await axios.post(`${API_BASE}/comp/programs`, { name: newProgramName });
+    setNewProgramName('');
+    setShowNewProgram(false);
+    loadPrograms();
   };
+
+  const currentProgram = programs.find(p => p.id === selectedProgram);
 
   return (
     <div className="flex h-full">
-      {/* Left Panel — Editor */}
-      <div className="w-80 border-r border-border-medium bg-bg-secondary flex flex-col">
+      {/* Left: File Explorer */}
+      <div className="w-64 border-r border-border-medium flex flex-col">
         <div className="p-3 border-b border-border-medium">
-          <h2 className="text-sm font-bold text-text-primary flex items-center gap-2">
-            <Cpu className="w-4 h-4" />
-            Comp Land
-          </h2>
-        </div>
-
-        <div className="p-3 space-y-3 flex-1 overflow-auto">
-          <div>
-            <label className="block text-xs text-text-secondary mb-1">Title</label>
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full h-8 px-2 rounded-lg bg-bg-primary border border-border-medium text-text-primary text-xs focus:outline-none focus:border-accent-primary"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs text-text-secondary mb-1">Language</label>
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value as 'python' | 'node' | 'rust')}
-              className="w-full h-8 px-2 rounded-lg bg-bg-primary border border-border-medium text-text-primary text-xs focus:outline-none focus:border-accent-primary"
-            >
-              <option value="python">Python</option>
-              <option value="node">Node.js</option>
-              <option value="rust">Rust</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs text-text-secondary mb-1">Script</label>
-            <textarea
-              value={script}
-              onChange={(e) => setScript(e.target.value)}
-              rows={10}
-              className="w-full px-2 py-1.5 rounded-lg bg-bg-primary border border-border-medium text-text-primary text-xs font-mono resize-y min-h-[200px] focus:outline-none focus:border-accent-primary"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs text-text-secondary mb-1">Dependencies (one per line)</label>
-            <textarea
-              value={deps}
-              onChange={(e) => setDeps(e.target.value)}
-              rows={3}
-              className="w-full px-2 py-1.5 rounded-lg bg-bg-primary border border-border-medium text-text-primary text-xs font-mono resize-y min-h-[60px] focus:outline-none focus:border-accent-primary"
-              placeholder="requests&#10;numpy>=1.20"
-            />
-          </div>
-
           <button
-            onClick={handleRun}
-            disabled={loading}
-            className="w-full h-9 rounded-lg bg-accent-primary text-white hover:bg-accent-primary/90 disabled:opacity-50 transition-all flex items-center justify-center gap-2 text-xs font-medium"
+            onClick={() => setShowNewProgram(true)}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-accent-primary text-white rounded-lg hover:bg-accent-primary-hover transition-colors"
           >
-            <Play className="w-3.5 h-3.5" />
-            {loading ? 'Running...' : 'Run'}
+            <Plus className="w-4 h-4" />
+            New Program
           </button>
         </div>
-      </div>
 
-      {/* Right Panel — Tasks */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <div className="flex items-center justify-between px-4 py-2 border-b border-border-medium bg-bg-secondary">
-          <div className="flex items-center gap-2">
-            <Terminal className="w-4 h-4 text-text-secondary" />
-            <span className="text-sm font-medium text-text-primary">Tasks</span>
-          </div>
-          <span className="text-xs text-text-secondary">{tasks.length} total</span>
-        </div>
-
-        <div className="flex-1 overflow-auto p-3 space-y-2">
-          {tasks.length === 0 ? (
-            <div className="text-center py-8 text-text-secondary text-sm">
-              No tasks yet. Create one and run!
-            </div>
-          ) : (
-            tasks.map((task) => (
+        <div className="flex-1 overflow-y-auto">
+          {programs.map(program => (
+            <div key={program.id}>
               <div
-                key={task.id}
-                className="rounded-lg border border-border-medium bg-bg-secondary overflow-hidden"
+                onClick={() => setSelectedProgram(program.id)}
+                className={`flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-bg-secondary transition-colors ${
+                  selectedProgram === program.id ? 'bg-bg-secondary' : ''
+                }`}
               >
-                <div className="flex items-center justify-between px-3 py-2 border-b border-border-medium">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-3.5 h-3.5 text-text-secondary" />
-                    <span className="text-xs font-medium text-text-primary">{task.title}</span>
-                    <span className={`text-xs px-1.5 py-0.5 rounded ${
-                      task.status === 'running' ? 'bg-accent-primary/20 text-accent-primary' :
-                      task.status === 'completed' ? 'bg-accent-success/20 text-accent-success' :
-                      task.status === 'error' ? 'bg-accent-danger/20 text-accent-danger' :
-                      'bg-bg-elevated text-text-secondary'
-                    }`}>
-                      {task.status}
-                    </span>
-                  </div>
-                  {task.status === 'running' && (
-                    <button
-                      onClick={() => handleStop(task.id)}
-                      className="p-1 rounded hover:bg-accent-danger/20 text-text-secondary hover:text-accent-danger transition-colors"
-                    >
-                      <Square className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </div>
-                {task.output && (
-                  <pre className="px-3 py-2 text-xs font-mono text-text-secondary whitespace-pre-wrap break-all max-h-32 overflow-auto">
-                    {task.output}
-                  </pre>
-                )}
+                <Folder className="w-4 h-4 text-accent-warning" />
+                <span className="text-sm font-medium truncate">{program.name}</span>
               </div>
-            ))
-          )}
+              {selectedProgram === program.id && program.files.map(file => (
+                <div
+                  key={file}
+                  onClick={() => loadFile(program.id, file)}
+                  className={`flex items-center gap-2 px-3 py-1.5 pl-8 cursor-pointer hover:bg-bg-secondary transition-colors ${
+                    selectedFile === file ? 'bg-bg-secondary text-accent-primary' : 'text-text-secondary'
+                  }`}
+                >
+                  <FileCode className="w-3.5 h-3.5" />
+                  <span className="text-xs truncate">{file}</span>
+                </div>
+              ))}
+            </div>
+          ))}
         </div>
       </div>
+
+      {/* Right: Editor + Output */}
+      <div className="flex-1 flex flex-col">
+        <div className="flex items-center justify-between px-4 py-2 border-b border-border-medium">
+          <div className="flex items-center gap-2">
+            <Cpu className="w-4 h-4 text-accent-primary" />
+            <span className="text-sm font-medium">{currentProgram?.name || 'Compland'}</span>
+            {selectedFile && <span className="text-xs text-text-tertiary">— {selectedFile}</span>}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={saveFile}
+              disabled={!selectedProgram || !selectedFile}
+              className="px-3 py-1.5 text-xs bg-bg-elevated border border-border-medium rounded hover:bg-bg-secondary transition-colors disabled:opacity-50"
+            >
+              Save
+            </button>
+            <button
+              onClick={runProgram}
+              disabled={!selectedProgram || isRunning}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-accent-success text-white rounded hover:bg-accent-success-hover transition-colors disabled:opacity-50"
+            >
+              <Play className="w-3.5 h-3.5" />
+              {isRunning ? 'Running...' : 'Run'}
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 flex flex-col">
+          <textarea
+            value={fileContent}
+            onChange={(e) => setFileContent(e.target.value)}
+            disabled={!selectedFile}
+            className="flex-1 p-4 font-mono text-sm bg-bg-primary resize-none outline-none border-none disabled:opacity-50"
+            placeholder={selectedFile ? '' : 'Select a file to edit'}
+            spellCheck={false}
+          />
+
+          <div className="h-40 border-t border-border-medium flex flex-col">
+            <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border-medium bg-bg-secondary">
+              <Terminal className="w-3.5 h-3.5 text-text-tertiary" />
+              <span className="text-xs font-medium text-text-tertiary">Output</span>
+            </div>
+            <pre className="flex-1 p-3 overflow-auto font-mono text-xs text-text-secondary whitespace-pre-wrap">
+              {output || 'Click Run to execute'}
+            </pre>
+          </div>
+        </div>
+      </div>
+
+      {/* New Program Modal */}
+      {showNewProgram && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-bg-primary border border-border-medium rounded-xl p-6 w-80">
+            <h3 className="text-lg font-medium mb-4">New Program</h3>
+            <input
+              type="text"
+              value={newProgramName}
+              onChange={(e) => setNewProgramName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && createProgram()}
+              placeholder="Program name"
+              className="w-full px-3 py-2 bg-bg-secondary border border-border-medium rounded-lg text-sm mb-4 outline-none focus:border-accent-primary"
+              autoFocus
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowNewProgram(false)}
+                className="flex-1 px-3 py-2 text-sm border border-border-medium rounded-lg hover:bg-bg-secondary transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={createProgram}
+                className="flex-1 px-3 py-2 text-sm bg-accent-primary text-white rounded-lg hover:bg-accent-primary-hover transition-colors"
+              >
+                Create
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

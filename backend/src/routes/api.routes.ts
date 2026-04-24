@@ -371,4 +371,96 @@ router.post('/comp/tasks/:id/stop', (req, res) => {
     }
 });
 
+import { listPrograms, getProgram, createProgram, deleteProgram, renameProgram } from '../compland/project-manager.js';
+import { readProgramFile, writeProgramFile, deleteProgramFile } from '../compland/file-service.js';
+import { runProgram, complandEventEmitter } from '../compland/executor.js';
+
+// Compland Programs
+router.get('/comp/programs', (req, res) => {
+    try {
+        const programs = listPrograms();
+        res.json(programs);
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+router.post('/comp/programs', (req, res) => {
+    try {
+        const { name } = req.body;
+        const program = createProgram(name);
+        res.json(program);
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+router.get('/comp/programs/:id', (req, res) => {
+    try {
+        const program = getProgram(req.params.id);
+        if (!program) return res.status(404).json({ error: 'Program not found' });
+        res.json(program);
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+router.put('/comp/programs/:id', (req, res) => {
+    try {
+        const { name } = req.body;
+        const program = renameProgram(req.params.id, name);
+        if (!program) return res.status(404).json({ error: 'Program not found' });
+        res.json(program);
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+router.delete('/comp/programs/:id', (req, res) => {
+    try {
+        deleteProgram(req.params.id);
+        res.json({ success: true });
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Compland Files
+// File routes using router.use for catch-all
+router.use('/comp/programs/:id/files', (req, res) => {
+    try {
+        const filePath = req.path.replace(/^\/+/, '');
+        if (req.method === 'GET') {
+            const content = readProgramFile(req.params.id, filePath);
+            if (content === null) return res.status(404).json({ error: 'File not found' });
+            res.json({ content });
+        } else if (req.method === 'PUT') {
+            const { content } = req.body;
+            const success = writeProgramFile(req.params.id, filePath, content);
+            if (!success) return res.status(500).json({ error: 'Failed to write file' });
+            res.json({ success: true });
+        } else if (req.method === 'DELETE') {
+            const success = deleteProgramFile(req.params.id, filePath);
+            if (!success) return res.status(404).json({ error: 'File not found' });
+            res.json({ success: true });
+        } else {
+            res.status(405).send('Method Not Allowed');
+        }
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Compland Run
+router.post('/comp/programs/:id/run', (req, res) => {
+    try {
+        const program = getProgram(req.params.id);
+        if (!program) return res.status(404).json({ error: 'Program not found' });
+        const result = runProgram(program);
+        res.json(result);
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 export default router;
