@@ -186,7 +186,17 @@ function runCode(
     complandEventEmitter.emit(`comp:log:${program.id}`, { programId: program.id, text: `[stderr] ${text}` });
   });
 
+  // Flush logs every 5 seconds while running
+  const logFlushInterval = setInterval(() => {
+    if (runningProcesses.has(program.id)) {
+      saveLog(result, logPath, program);
+    } else {
+      clearInterval(logFlushInterval);
+    }
+  }, 5000);
+
   proc.on('close', (code) => {
+    clearInterval(logFlushInterval);
     result.status = code === 0 ? 'completed' : 'error';
     result.exitCode = code;
     result.completedAt = new Date().toISOString();
@@ -196,6 +206,7 @@ function runCode(
   });
 
   proc.on('error', (err) => {
+    clearInterval(logFlushInterval);
     result.status = 'error';
     result.stderr = `Process error: ${err.message}`;
     result.exitCode = -1;
