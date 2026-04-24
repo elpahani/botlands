@@ -115,51 +115,72 @@ export const ComplandTab: React.FC = () => {
         }
       }
       
-      if (processes.length > 0) {
-        setRunningProcesses(processes);
-      }
+      setRunningProcesses(prev => {
+        if (JSON.stringify(prev) === JSON.stringify(processes)) return prev;
+        return processes;
+      });
     } catch (e) {
-      // No running processes
+      console.error('Failed to load running processes:', e);
     }
   }, []);
 
-  // Load running processes on mount AND when switching to Processes tab
+  // Poll process status — recursive setTimeout
+  useEffect(() => {
+    let timerId: ReturnType<typeof setTimeout>;
+    let isMounted = true;
+
+    const poll = async () => {
+      try {
+        const res = await axios.get(`${API_BASE}/comp/running`);
+        const running = res.data;
+        
+        if (!isMounted) return;
+
+        const processes: RunningProcess[] = [];
+        for (const proc of running) {
+          try {
+            const progRes = await axios.get(`${API_BASE}/comp/programs/${proc.programId}`);
+            const program = progRes.data;
+            processes.push({
+              programId: proc.programId,
+              programName: program.name,
+              status: 'running',
+              stdout: '',
+              stderr: '',
+              startedAt: new Date().toISOString(),
+            });
+          } catch {
+            // Program might have been deleted
+          }
+        }
+
+        setRunningProcesses(prev => {
+          if (JSON.stringify(prev) === JSON.stringify(processes)) return prev;
+          return processes;
+        });
+      } catch (error) {
+        console.error('Poll error:', error);
+      } finally {
+        if (isMounted) {
+          timerId = setTimeout(poll, 5000); // Wait 5 seconds AFTER completion
+        }
+      }
+    };
+
+    poll(); // Start immediately
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timerId);
+    };
+  }, []);
+
+  // Load running processes when switching to Processes tab
   useEffect(() => {
     if (viewMode === 'processes') {
       loadRunning();
     }
   }, [viewMode, loadRunning]);
-
-  // Poll process status every 2 seconds
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      for (const proc of runningProcesses) {
-        try {
-          const res = await axios.get(`${API_BASE}/comp/programs/${proc.programId}/status`);
-          const data = res.data;
-          
-          // Update process status
-          setRunningProcesses(prev => prev.map(p => {
-            if (p.programId !== proc.programId) return p;
-            return {
-              ...p,
-              status: data.running ? 'running' : 'stopped',
-              stdout: data.logs || p.stdout,
-            };
-          }));
-
-          // If not running anymore, remove from active
-          if (!data.running) {
-            setRunningProcesses(prev => prev.filter(p => p.programId !== proc.programId));
-          }
-        } catch (e) {
-          // Process might have been deleted
-        }
-      }
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, [runningProcesses]);
 
   const createProgram = async () => {
     if (!newProgramName.trim()) return;
