@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
+import { io, Socket } from 'socket.io-client';
 import '@xterm/xterm/css/xterm.css';
 
 interface ComplandTerminalProps {
@@ -11,9 +12,8 @@ interface ComplandTerminalProps {
 export default function ComplandTerminal({ programId, initialLogs = '' }: ComplandTerminalProps) {
   const terminalRef = useRef<HTMLDivElement>(null);
   const xtermRef = useRef<Terminal | null>(null);
-  const wsRef = useRef<WebSocket | null>(null);
+  const socketRef = useRef<Socket | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
-  const currentProgramIdRef = useRef<string | null>(null);
 
   // Init terminal once
   useEffect(() => {
@@ -69,71 +69,59 @@ export default function ComplandTerminal({ programId, initialLogs = '' }: Compla
     };
   }, []);
 
-  // Write initial logs when no program running
+  // Socket.io connection — only for selected program
+  useEffect(() => {
+    if (!programId || !xtermRef.current) return;
+
+    // Clear terminal for new program
+    xtermRef.current.clear();
+    xtermRef.current.writeln(`\x1b[38;2;0;255;136mℹ\x1b[0m Connected to ${programId.slice(0, 8)}...`);
+
+    const socket = io({
+      path: '/socket.io',
+      transports: ['websocket', 'polling'],
+    });
+
+    socket.on('connect', () => {
+      console.log('[Socket.io] Connected');
+      socket.emit('subscribe', programId);
+    });
+
+    socket.on('log', (text: string) => {
+      if (xtermRef.current) {
+        xtermRef.current.write(text);
+      }
+    });
+
+    socket.on('completed', (data: { status: string; exitCode: number }) => {
+      if (xtermRef.current) {
+        xtermRef.current.writeln(`\n\x1b[38;2;255;68;68mProcess completed with status: ${data.status}\x1b[0m`);
+      }
+    });
+
+    socket.on('disconnect', () => {
+      console.log('[Socket.io] Disconnected');
+    });
+
+    socket.on('connect_error', (err) => {
+      console.error('[Socket.io] Connection error:', err.message);
+    });
+
+    socketRef.current = socket;
+
+    return () => {
+      socket.emit('unsubscribe', programId);
+      socket.disconnect();
+    };
+  }, [programId]);
+
+  // Write initial logs when no program selected
   useEffect(() => {
     if (xtermRef.current && initialLogs && !programId) {
       xtermRef.current.clear();
       xtermRef.current.writeln(initialLogs);
     }
   }, [initialLogs, programId]);
-
-  // WebSocket for live logs
-  useEffect(() => {
-    if (!programId || !xtermRef.current) return;
-
-    // Don't reconnect if already connected to same program
-    if (currentProgramIdRef.current === programId && wsRef.current?.readyState === WebSocket.OPEN) {
-      return;
-    }
-
-    // Close old connection
-    if (wsRef.current) {
-      wsRef.current.close();
-    }
-
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host;
-    const ws = new WebSocket(`${protocol}//${host}/ws/compland`);
-
-    ws.onopen = () => {
-      console.log('[WS] Connected to Compland for', programId);
-      ws.send(JSON.stringify({ type: 'subscribe', programId }));
-      currentProgramIdRef.current = programId;
-      
-      if (xtermRef.current) {
-        xtermRef.current.clear();
-        xtermRef.current.writeln(`\x1b[38;2;0;255;136mℹ\x1b[0m Connected to ${programId.slice(0, 8)}...`);
-      }
-    };
-
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === 'log' && xtermRef.current) {
-          xtermRef.current.write(data.text);
-        } else if (data.type === 'completed' && xtermRef.current) {
-          xtermRef.current.writeln(`\n\x1b[38;2;255;68;68mProcess completed with status: ${data.status}\x1b[0m`);
-        }
-      } catch (e) {
-        console.error('[WS] Invalid message:', e);
-      }
-    };
-
-    ws.onerror = (error) => {
-      console.error('[WS] Error:', error);
-    };
-
-    ws.onclose = () => {
-      console.log('[WS] Disconnected from Compland');
-      currentProgramIdRef.current = null;
-    };
-
-    wsRef.current = ws;
-
-    return () => {
-      ws.close();
-    };
-  }, [programId]);
 
   return (
     <div
