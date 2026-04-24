@@ -2,7 +2,7 @@ import { Server } from 'socket.io';
 import type { Server as HttpServer } from 'http';
 
 export class WebSocketService {
-    private io: Server | null = null;
+    public io: Server | null = null;
 
     initialize(httpServer: HttpServer) {
         this.io = new Server(httpServer, {

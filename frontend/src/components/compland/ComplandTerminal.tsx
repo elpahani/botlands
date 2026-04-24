@@ -77,8 +77,7 @@ export default function ComplandTerminal({ programId, initialLogs = '' }: Compla
     xtermRef.current.clear();
     xtermRef.current.writeln(`\x1b[38;2;0;255;136mℹ\x1b[0m Connected to ${programId.slice(0, 8)}...`);
 
-    const socket = io({
-      path: '/socket.io',
+    const socket = io('/compland', {
       transports: ['websocket', 'polling'],
     });
 

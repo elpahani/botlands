@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import { createServer } from 'http';
-import { Server as SocketIOServer } from 'socket.io';
 import apiRoutes from './routes/api.routes.js';
 import { wsService } from './services/websocket.service.js';
 import { mcpService } from './services/mcp.service.js';
@@ -28,15 +27,8 @@ app.use('/api/comp-logs', express.static(COMPLAND_BASE_PATH));
 const server = createServer(app);
 wsService.initialize(server);
 
-// Socket.io for Compland (rooms-based, replaces WebSocket)
-const io = new SocketIOServer(server, {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST'],
-  },
-  path: '/socket.io',
-});
-initializeComplandSocketIO(io);
+// Compland Socket.io namespace on shared server
+initializeComplandSocketIO(wsService.io!);
 
 // Daily cleanup of old tasks
 import { cleanupOldTasks } from './compland/task-manager.js';
