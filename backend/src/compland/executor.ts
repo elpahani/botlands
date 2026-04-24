@@ -10,6 +10,37 @@ export const complandEventEmitter = new EventEmitter();
 
 const runningProcesses = new Map<string, ChildProcess>();
 
+// Scan /proc on startup to find orphaned Compland processes
+function scanOrphanedProcesses(): void {
+  try {
+    const { readdirSync, readFileSync } = require('fs');
+    const dirs = readdirSync('/proc');
+    for (const dir of dirs) {
+      if (!/^\d+$/.test(dir)) continue;
+      try {
+        const cmdline = readFileSync(`/proc/${dir}/cmdline`, 'utf-8').replace(/\0/g, ' ').trim();
+        // Look for python processes running from compland directories
+        if (cmdline.includes(COMPLAND_ROOT) && cmdline.includes('python')) {
+          // Extract program ID from the path
+          const match = cmdline.match(/compland\/([a-f0-9-]+)/);
+          if (match) {
+            const programId = match[1];
+            // Create a fake ChildProcess reference
+            const fakeProc = { pid: parseInt(dir) } as ChildProcess;
+            runningProcesses.set(programId, fakeProc);
+            console.log(`[Compland] Restored orphaned process ${programId} (PID ${dir})`);
+          }
+        }
+      } catch { /* process might have exited */ }
+    }
+  } catch (e) {
+    console.error('[Compland] Failed to scan orphaned processes:', e);
+  }
+}
+
+// Scan on startup
+scanOrphanedProcesses();
+
 export interface ExecutionResult {
   programId: string;
   status: 'running' | 'completed' | 'error';
@@ -185,6 +216,13 @@ export function stopProgram(programId: string): boolean {
 
 export function isRunning(programId: string): boolean {
   return runningProcesses.has(programId);
+}
+
+export function getRunningProcesses(): { programId: string; pid: number | undefined }[] {
+  return Array.from(runningProcesses.entries()).map(([programId, proc]) => ({
+    programId,
+    pid: proc.pid,
+  }));
 }
 
 function saveLog(result: ExecutionResult, path: string, program: ComplandProgram) {

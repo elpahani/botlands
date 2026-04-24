@@ -92,6 +92,43 @@ export const ComplandTab: React.FC = () => {
     }
   };
 
+  // Load running processes on mount
+  useEffect(() => {
+    const loadRunning = async () => {
+      try {
+        const res = await axios.get(`${API_BASE}/comp/running`);
+        const running = res.data;
+        
+        // Get program details for each running process
+        const processes: RunningProcess[] = [];
+        for (const proc of running) {
+          try {
+            const progRes = await axios.get(`${API_BASE}/comp/programs/${proc.programId}`);
+            const program = progRes.data;
+            processes.push({
+              programId: proc.programId,
+              programName: program.name,
+              status: 'running',
+              stdout: '',
+              stderr: '',
+              startedAt: new Date().toISOString(),
+            });
+          } catch {
+            // Program might have been deleted
+          }
+        }
+        
+        if (processes.length > 0) {
+          setRunningProcesses(processes);
+        }
+      } catch (e) {
+        // No running processes
+      }
+    };
+    
+    loadRunning();
+  }, []);
+
   // Poll process status every 2 seconds
   useEffect(() => {
     const interval = setInterval(async () => {

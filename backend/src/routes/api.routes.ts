@@ -374,7 +374,7 @@ router.post('/comp/tasks/:id/stop', (req, res) => {
 
 import { listPrograms, getProgram, createProgram, deleteProgram, renameProgram } from '../compland/project-manager.js';
 import { readProgramFile, writeProgramFile, deleteProgramFile } from '../compland/file-service.js';
-import { runProgram, stopProgram, isRunning, complandEventEmitter } from '../compland/executor.js';
+import { runProgram, stopProgram, isRunning, getRunningProcesses, complandEventEmitter } from '../compland/executor.js';
 
 const COMPLAND_ROOT = process.env.COMPLAND_BASE_PATH || '/app/compland';
 
@@ -470,6 +470,16 @@ router.post('/comp/programs/:id/stop', (req, res) => {
     try {
         const success = stopProgram(req.params.id);
         res.json({ success });
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Compland running processes
+router.get('/comp/running', (req, res) => {
+    try {
+        const processes = getRunningProcesses();
+        res.json(processes);
     } catch (e: any) {
         res.status(500).json({ error: e.message });
     }
