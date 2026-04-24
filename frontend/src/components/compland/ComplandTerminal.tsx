@@ -13,9 +13,11 @@ export default function ComplandTerminal({ programId, initialLogs = '' }: Compla
   const xtermRef = useRef<Terminal | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
+  const currentProgramIdRef = useRef<string | null>(null);
 
+  // Init terminal once
   useEffect(() => {
-    if (!terminalRef.current) return;
+    if (!terminalRef.current || xtermRef.current) return;
 
     const term = new Terminal({
       fontFamily: 'Menlo, Monaco, "Courier New", monospace',
@@ -55,12 +57,6 @@ export default function ComplandTerminal({ programId, initialLogs = '' }: Compla
     xtermRef.current = term;
     fitAddonRef.current = fitAddon;
 
-    if (initialLogs) {
-      term.writeln(initialLogs);
-    } else {
-      term.writeln('\x1b[38;2;0;255;136mℹ\x1b[0m Waiting for output...');
-    }
-
     const resizeObserver = new ResizeObserver(() => {
       fitAddon.fit();
     });
@@ -69,19 +65,45 @@ export default function ComplandTerminal({ programId, initialLogs = '' }: Compla
     return () => {
       resizeObserver.disconnect();
       term.dispose();
+      xtermRef.current = null;
     };
   }, []);
 
+  // Write initial logs when no program running
+  useEffect(() => {
+    if (xtermRef.current && initialLogs && !programId) {
+      xtermRef.current.clear();
+      xtermRef.current.writeln(initialLogs);
+    }
+  }, [initialLogs, programId]);
+
+  // WebSocket for live logs
   useEffect(() => {
     if (!programId || !xtermRef.current) return;
+
+    // Don't reconnect if already connected to same program
+    if (currentProgramIdRef.current === programId && wsRef.current?.readyState === WebSocket.OPEN) {
+      return;
+    }
+
+    // Close old connection
+    if (wsRef.current) {
+      wsRef.current.close();
+    }
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host;
     const ws = new WebSocket(`${protocol}//${host}/ws/compland`);
 
     ws.onopen = () => {
-      console.log('[WS] Connected to Compland');
+      console.log('[WS] Connected to Compland for', programId);
       ws.send(JSON.stringify({ type: 'subscribe', programId }));
+      currentProgramIdRef.current = programId;
+      
+      if (xtermRef.current) {
+        xtermRef.current.clear();
+        xtermRef.current.writeln(`\x1b[38;2;0;255;136mℹ\x1b[0m Connected to ${programId.slice(0, 8)}...`);
+      }
     };
 
     ws.onmessage = (event) => {
@@ -103,6 +125,7 @@ export default function ComplandTerminal({ programId, initialLogs = '' }: Compla
 
     ws.onclose = () => {
       console.log('[WS] Disconnected from Compland');
+      currentProgramIdRef.current = null;
     };
 
     wsRef.current = ws;
@@ -111,13 +134,6 @@ export default function ComplandTerminal({ programId, initialLogs = '' }: Compla
       ws.close();
     };
   }, [programId]);
-
-  useEffect(() => {
-    if (xtermRef.current && initialLogs && !programId) {
-      xtermRef.current.clear();
-      xtermRef.current.writeln(initialLogs);
-    }
-  }, [initialLogs, programId]);
 
   return (
     <div

@@ -136,12 +136,14 @@ function installDeps(
       const text = data.toString();
       result.stdout += text;
       complandEventEmitter.emit(`comp:log:${program.id}`, { programId: program.id, text });
+      complandEventEmitter.emit('comp:log', { programId: program.id, text });
     });
 
     pip.stderr?.on('data', (data) => {
       const text = data.toString();
       errorOutput += text;
       complandEventEmitter.emit(`comp:log:${program.id}`, { programId: program.id, text: `[pip] ${text}` });
+      complandEventEmitter.emit('comp:log', { programId: program.id, text: `[pip] ${text}` });
     });
 
     pip.on('close', (code) => {
@@ -178,12 +180,14 @@ function runCode(
     const text = data.toString();
     result.stdout += text;
     complandEventEmitter.emit(`comp:log:${program.id}`, { programId: program.id, text });
+    complandEventEmitter.emit('comp:log', { programId: program.id, text });
   });
 
   proc.stderr?.on('data', (data) => {
     const text = data.toString();
     result.stderr += text;
     complandEventEmitter.emit(`comp:log:${program.id}`, { programId: program.id, text: `[stderr] ${text}` });
+    complandEventEmitter.emit('comp:log', { programId: program.id, text: `[stderr] ${text}` });
   });
 
   // Flush logs every 5 seconds while running
