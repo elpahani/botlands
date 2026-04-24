@@ -1,15 +1,13 @@
 import { spawn, type ChildProcess } from 'child_process';
 import { writeFileSync, appendFileSync, mkdirSync, existsSync, readFileSync, rmSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
-import { EventEmitter } from 'events';
 import { v4 as uuidv4 } from 'uuid';
+import { complandEventEmitter } from './executor.js';
 
 const COMPLAND_BASE_PATH = process.env.COMPLAND_BASE_PATH || '/app/compland';
 const MAX_PARALLEL = parseInt(process.env.COMPLAND_MAX_PARALLEL || '4', 10);
 const TIMEOUT_MS = parseInt(process.env.COMPLAND_TIMEOUT_MS || '60000', 10);
 const MEMORY_MB = parseInt(process.env.COMPLAND_MEMORY_MB || '512', 10);
-
-export const complandEventEmitter = new EventEmitter();
 
 export interface CompTask {
   id: string;

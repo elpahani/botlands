@@ -4,7 +4,9 @@ import { createServer } from 'http';
 import apiRoutes from './routes/api.routes.js';
 import { wsService } from './services/websocket.service.js';
 import { mcpService } from './services/mcp.service.js';
-import { complandEventEmitter } from './compland/task-manager.js';
+import { WebSocketServer } from 'ws';
+import { initializeComplandWebSocket } from './compland/websocket.js';
+import { complandEventEmitter } from './compland/executor.js';
 
 const app = express();
 app.use(cors());
@@ -26,17 +28,9 @@ app.use('/api/comp-logs', express.static(COMPLAND_BASE_PATH));
 const server = createServer(app);
 wsService.initialize(server);
 
-// Comp EventEmitter → WebSocket bridge
-complandEventEmitter.on('comp:log', (data: { taskId: string; text: string }) => {
-    wsService.broadcast('comp:log', {
-        taskId: data.taskId,
-        text: data.text,
-    });
-});
-
-complandEventEmitter.on('comp:completed', (task: any) => {
-    wsService.broadcast('comp:completed', task);
-});
+// Compland WebSocket Server
+const complandWSS = new WebSocketServer({ server, path: '/ws/compland' });
+initializeComplandWebSocket(complandWSS);
 
 // Daily cleanup of old tasks
 import { cleanupOldTasks } from './compland/task-manager.js';

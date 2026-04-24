@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { Play, Plus, Folder, FileCode, Terminal, Cpu, Square, Activity } from 'lucide-react';
+import ComplandTerminal from './ComplandTerminal';
 
 const API_BASE = '/api';
 
@@ -348,10 +349,12 @@ export const ComplandTab: React.FC = () => {
                 <Terminal className="w-3.5 h-3.5 text-text-tertiary" />
                 <span className="text-xs font-medium text-text-tertiary">Output</span>
               </div>
-              <pre className="flex-1 p-3 overflow-auto font-mono text-xs text-text-secondary whitespace-pre-wrap"
-              >
-                {output || 'Click Run to execute'}
-              </pre>
+              <div className="flex-1 p-0 overflow-hidden" style={{ height: 'calc(100% - 32px)' }}>
+                <ComplandTerminal 
+                  programId={selectedProcess}
+                  initialLogs={output || 'Click Run to execute'}
+                />
+              </div>
             </div>
           </div>
         ) : (
@@ -408,10 +411,12 @@ export const ComplandTab: React.FC = () => {
                       Stop
                     </button>
                   </div>
-                  <pre className="flex-1 p-4 overflow-auto font-mono text-xs text-text-secondary whitespace-pre-wrap bg-bg-primary"
-                  >
-                    {currentProcess.stdout || 'Waiting for output...'}
-                  </pre>
+                  <div className="flex-1 flex flex-col" style={{ minHeight: 0 }}>
+                    <ComplandTerminal 
+                      programId={selectedProcess}
+                      initialLogs={currentProcess.stdout || ''}
+                    />
+                  </div>
                 </div>
               ) : (
                 <div className="flex-1 flex items-center justify-center text-text-tertiary">
