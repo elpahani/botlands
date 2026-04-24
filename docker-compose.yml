@@ -7,6 +7,11 @@ services:
     ports:
       - "3001:3001"
       - "8080:8080"
+      - "8081:8081"
+      - "8082:8082"
+      - "8083:8083"
+      - "8084:8084"
+      - "8085:8085"
     volumes:
       - ${WORKSPACE_PATH:-./data}:/app/data
       - compland:/app/compland
