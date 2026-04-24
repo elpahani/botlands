@@ -351,6 +351,7 @@ export const ComplandTab: React.FC = () => {
               </div>
               <div className="flex-1 p-0 overflow-hidden" style={{ height: 'calc(100% - 32px)' }}>
                 <ComplandTerminal 
+                  key={selectedProcess || 'editor'}
                   programId={selectedProcess}
                   initialLogs={output || 'Click Run to execute'}
                 />
@@ -413,6 +414,7 @@ export const ComplandTab: React.FC = () => {
                   </div>
                   <div className="flex-1 flex flex-col" style={{ minHeight: 0 }}>
                     <ComplandTerminal 
+                      key={currentProcess.programId}
                       programId={selectedProcess}
                       initialLogs={currentProcess.stdout || ''}
                     />
