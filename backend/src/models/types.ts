@@ -33,6 +33,8 @@ export interface Task {
     updatedAt?: string;
     scriptContent?: string;
     executionId?: string;
+    categories?: string[]; // теги/категории
+    programId?: string; // Compland программа для автозапуска
 }
 
 export interface Scenario {

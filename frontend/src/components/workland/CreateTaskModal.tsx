@@ -20,6 +20,8 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
 }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [categories, setCategories] = useState('');
+  const [programId, setProgramId] = useState('');
   const [linkedDocumentId, setLinkedDocumentId] = useState<string | null>(null);
   const [showDocSelector, setShowDocSelector] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -30,12 +32,15 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
 
     setLoading(true);
     try {
+      const cats = categories.split(',').map(c => c.trim()).filter(c => c.length > 0);
       await axios.post(`${API_BASE}/tasks`, {
         title,
         description,
         scenarioId,
         linkedDocumentId,
         status: 'waiting',
+        categories: cats,
+        programId: programId || undefined,
       });
       onCreate();
       onClose();
@@ -97,6 +102,33 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
               rows={3}
               className="w-full min-h-[80px] px-3 py-2 resize-y rounded-lg bg-bg-secondary border border-border-medium text-text-primary placeholder-text-tertiary focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary transition-all resize-none"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1.5">
+              Tags (comma separated)
+            </label>
+            <input
+              type="text"
+              value={categories}
+              onChange={(e) => setCategories(e.target.value)}
+              placeholder="frontend, urgent, api..."
+              className="w-full h-9 px-3 rounded-lg bg-bg-secondary border border-border-medium text-text-primary placeholder-text-tertiary focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary transition-all"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1.5">
+              Compland Program ID
+            </label>
+            <input
+              type="text"
+              value={programId}
+              onChange={(e) => setProgramId(e.target.value)}
+              placeholder="e4078b99-... (for auto-run)"
+              className="w-full h-9 px-3 rounded-lg bg-bg-secondary border border-border-medium text-text-primary placeholder-text-tertiary focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary transition-all font-mono text-xs"
+            />
+            <p className="text-[10px] text-text-tertiary mt-1">Program will auto-run when task becomes Active</p>
           </div>
 
           {/* Document Linkage */}

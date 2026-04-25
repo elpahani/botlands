@@ -20,6 +20,7 @@ export const TaskEditorPanel: React.FC<TaskEditorPanelProps> = ({
 }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [categories, setCategories] = useState('');
   const [status, setStatus] = useState<Task['status']>('waiting');
   const [linkedDocumentId, setLinkedDocumentId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -28,6 +29,7 @@ export const TaskEditorPanel: React.FC<TaskEditorPanelProps> = ({
     if (task) {
       setTitle(task.title);
       setDescription(task.description);
+      setCategories((task.categories || []).join(', '));
       setStatus(task.status);
       setLinkedDocumentId(task.linkedDocumentId || null);
     }
@@ -38,11 +40,13 @@ export const TaskEditorPanel: React.FC<TaskEditorPanelProps> = ({
   const handleSave = async () => {
     setSaving(true);
     try {
+      const cats = categories.split(',').map(c => c.trim()).filter(c => c.length > 0);
       await axios.put(`${API_BASE}/tasks/${task.id}`, {
         title,
         description,
         status,
         linkedDocumentId,
+        categories: cats,
       });
       onUpdate();
     } catch (err) {
@@ -142,6 +146,19 @@ export const TaskEditorPanel: React.FC<TaskEditorPanelProps> = ({
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
               className="w-full px-3 py-2 rounded-lg bg-bg-secondary border border-border-medium text-text-primary placeholder-text-tertiary focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary transition-all resize-y text-sm min-h-[80px]"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-2">
+              Tags (comma separated)
+            </label>
+            <input
+              type="text"
+              value={categories}
+              onChange={(e) => setCategories(e.target.value)}
+              placeholder="frontend, urgent, api..."
+              className="w-full h-9 px-3 rounded-lg bg-bg-secondary border border-border-medium text-text-primary placeholder-text-tertiary focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary transition-all"
             />
           </div>
 

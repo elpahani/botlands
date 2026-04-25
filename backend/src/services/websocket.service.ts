@@ -26,6 +26,13 @@ export class WebSocketService {
         }
     }
 
+    broadcastTaskEvent(event: 'task:created' | 'task:updated' | 'task:deleted', task: any) {
+        if (this.io) {
+            this.io.emit(event, task);
+            this.io.emit('workspace_updated');
+        }
+    }
+
     broadcastUpdate() {
         if (this.io) {
             this.io.emit('workspace_updated');

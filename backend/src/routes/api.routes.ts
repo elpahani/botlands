@@ -37,7 +37,7 @@ router.get('/tasks', (req, res) => {
 
 router.post('/tasks', (req, res) => {
     try {
-        const { title, status, time, date, description, scenarioId, linkedDocumentId, assignee } = req.body;
+        const { title, status, time, date, description, scenarioId, linkedDocumentId, assignee, categories } = req.body;
         const now = new Date().toISOString();
         const defaultTime = time || now.split('T')[1]?.slice(0,5) || '00:00';
         const defaultDate = date || now.split('T')[0] || now.slice(0,10);
@@ -49,19 +49,41 @@ router.post('/tasks', (req, res) => {
             description || '',
             scenarioId,
             linkedDocumentId,
-            assignee
+            assignee,
+            req.body.programId
         );
+        if (categories) {
+            storageService.updateTaskCategories(task.id, categories);
+        }
         logAction('USER', 'CREATE_TASK', { id: task.id, title });
-        wsService.broadcastUpdate();
+        wsService.broadcastTaskEvent('task:created', task);
         res.status(201).json(task);
     } catch (e: any) {
         res.status(500).json({ error: e.message });
     }
 });
 
-router.put('/tasks/:id', (req, res) => {
+router.put('/tasks/:id', async (req, res) => {
     try {
+        const { status, programId } = req.body;
         const task = storageService.updateTask(req.params.id, req.body);
+        
+        // Auto-run Compland program when task becomes active
+        if (status === 'active' && task.programId) {
+            console.log(`[AutoRun] Task ${task.id} activated, running program ${task.programId}`);
+            // Lazy import to avoid circular dependency
+            const { runProgram: runComplandProgram } = await import('../compland/executor.js');
+            const { getProgram } = await import('../compland/project-manager.js');
+            const program = getProgram(task.programId);
+            if (program) {
+                runComplandProgram(program).catch((err: any) => {
+                    console.error('[AutoRun] Failed:', err);
+                });
+            } else {
+                console.error(`[AutoRun] Program ${task.programId} not found`);
+            }
+        }
+        
         logAction('USER', 'UPDATE_TASK', { id: task.id, title: task.title });
         wsService.broadcastUpdate();
         res.json(task);
@@ -76,6 +98,28 @@ router.delete('/tasks/:id', (req, res) => {
         logAction('USER', 'DELETE_TASK', { id: req.params.id });
         wsService.broadcastUpdate();
         res.json({ success: true });
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Categories
+router.get('/categories', (req, res) => {
+    try {
+        const categories = storageService.getCategories();
+        res.json(categories);
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+router.put('/tasks/:id/categories', (req, res) => {
+    try {
+        const { categories } = req.body;
+        const task = storageService.updateTaskCategories(req.params.id, categories || []);
+        logAction('USER', 'UPDATE_TASK_CATEGORIES', { id: task.id, categories });
+        wsService.broadcastUpdate();
+        res.json(task);
     } catch (e: any) {
         res.status(500).json({ error: e.message });
     }
@@ -121,6 +165,28 @@ router.get('/documents/:id', (req, res) => {
     const doc = storageService.getDocument(req.params.id);
     if (!doc) return res.status(404).json({ error: 'Not found' });
     res.json(doc);
+});
+
+// Create document from JSON content
+router.post('/documents', (req, res) => {
+    try {
+        const { title, content, folderId, extension } = req.body;
+        const targetFolder = folderId || INBOX_FOLDER_ID;
+        const ext = extension || '.html';
+        
+        const doc = storageService.createDocument(
+            title || 'Untitled',
+            content || '',
+            targetFolder,
+            ext
+        );
+        
+        logAction('USER', 'CREATE_DOCUMENT', { id: doc.id, title: doc.title, folderId: doc.folderId });
+        wsService.broadcastUpdate();
+        res.status(201).json(doc);
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
 router.post('/documents/upload', upload.single('file'), (req, res) => {

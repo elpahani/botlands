@@ -35,6 +35,14 @@ export interface Task {
     createdAt: string;
     updatedAt: string;
     assignee?: string;
+    categories?: string[]; // теги/категории для фильтрации
+}
+
+export interface Category {
+    id: string;
+    name: string;
+    color: string;
+    count: number;
 }
 
 export interface Scenario {

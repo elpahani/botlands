@@ -6,19 +6,40 @@ import '@xterm/xterm/css/xterm.css';
 
 interface ComplandTerminalProps {
   programId: string | null;
-  initialLogs?: string;
   logs?: string;
-  onLog?: (text: string) => void;
 }
 
-export default function ComplandTerminal({ programId, initialLogs = '', logs = '', onLog }: ComplandTerminalProps) {
+// Module-level socket singleton
+let globalSocket: Socket | null = null;
+let socketRefCount = 0;
+
+function acquireSocket(): Socket {
+  if (!globalSocket) {
+    globalSocket = io({
+      transports: ['websocket', 'polling'],
+    });
+    console.log('[Socket] Created global socket');
+  }
+  socketRefCount++;
+  return globalSocket;
+}
+
+function releaseSocket() {
+  socketRefCount--;
+  if (socketRefCount <= 0 && globalSocket) {
+    globalSocket.disconnect();
+    globalSocket = null;
+    console.log('[Socket] Disconnected global socket');
+  }
+}
+
+export default function ComplandTerminal({ programId, logs = '' }: ComplandTerminalProps) {
   const terminalRef = useRef<HTMLDivElement>(null);
   const xtermRef = useRef<Terminal | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const currentProgramRef = useRef<string | null>(null);
-  const fitAddonRef = useRef<FitAddon | null>(null);
 
-  // Init terminal once
+  // Init terminal and socket ONCE per component instance
   useEffect(() => {
     if (!terminalRef.current || xtermRef.current) return;
 
@@ -58,7 +79,37 @@ export default function ComplandTerminal({ programId, initialLogs = '', logs = '
     fitAddon.fit();
 
     xtermRef.current = term;
-    fitAddonRef.current = fitAddon;
+
+    const socket = acquireSocket();
+    socketRef.current = socket;
+
+    const onConnect = () => {
+      console.log('[Socket] Connected');
+      if (currentProgramRef.current) {
+        socket.emit('subscribe', currentProgramRef.current);
+      }
+    };
+
+    const onLog = (text: string) => {
+      if (xtermRef.current) {
+        xtermRef.current.write(text);
+      }
+    };
+
+    const onCompleted = (data: { status: string; exitCode: number }) => {
+      if (xtermRef.current) {
+        xtermRef.current.writeln(`\n\x1b[38;2;255;68;68mProcess completed with status: ${data.status}\x1b[0m`);
+      }
+    };
+
+    socket.on('connect', onConnect);
+    socket.on('log', onLog);
+    socket.on('completed', onCompleted);
+
+    // Already connected? Subscribe immediately
+    if (socket.connected && currentProgramRef.current) {
+      socket.emit('subscribe', currentProgramRef.current);
+    }
 
     const resizeObserver = new ResizeObserver(() => {
       fitAddon.fit();
@@ -67,91 +118,52 @@ export default function ComplandTerminal({ programId, initialLogs = '', logs = '
 
     return () => {
       resizeObserver.disconnect();
+      socket.off('connect', onConnect);
+      socket.off('log', onLog);
+      socket.off('completed', onCompleted);
+      if (currentProgramRef.current) {
+        socket.emit('unsubscribe', currentProgramRef.current);
+      }
+      releaseSocket();
       term.dispose();
       xtermRef.current = null;
+      socketRef.current = null;
     };
   }, []);
 
-  // Handle programId changes - cleanup and reconnect
+  // Handle programId changes
   useEffect(() => {
-    // If no programId, just show initial message
-    if (!programId) {
-      if (xtermRef.current) {
-        xtermRef.current.clear();
-        if (initialLogs) {
-          xtermRef.current.write(initialLogs);
-        } else {
-          xtermRef.current.writeln('\x1b[38;2;0;255;136mℹ\x1b[0m Select a process to view logs');
-        }
-      }
-      return;
+    const socket = socketRef.current;
+    if (!socket || !xtermRef.current) return;
+
+    const oldProgram = currentProgramRef.current;
+
+    if (oldProgram === programId) return;
+
+    currentProgramRef.current = programId;
+
+    if (oldProgram) {
+      socket.emit('unsubscribe', oldProgram);
     }
 
-    // If switching to a different program, clear and reconnect
-    if (currentProgramRef.current !== programId) {
-      currentProgramRef.current = programId;
-      
-      if (xtermRef.current) {
-        xtermRef.current.clear();
-        xtermRef.current.writeln(`\x1b[38;2;0;255;136mℹ\x1b[0m Connected to ${programId.slice(0, 8)}...`);
-      }
-
-      // Disconnect old socket
-      if (socketRef.current) {
-        socketRef.current.emit('unsubscribe', socketRef.current.io.opts.query?.programId);
-        socketRef.current.disconnect();
-        socketRef.current = null;
-      }
-
-      // Connect new socket
-      const socket = io('/compland', {
-        transports: ['websocket', 'polling'],
-      });
-
-      socket.on('connect', () => {
-        console.log('[Socket.io] Connected to', programId);
+    xtermRef.current.clear();
+    if (programId) {
+      xtermRef.current.writeln(`\x1b[38;2;0;255;136mℹ\x1b[0m Connected to ${programId.slice(0, 8)}...`);
+      if (socket.connected) {
         socket.emit('subscribe', programId);
-      });
-
-      socket.on('log', (text: string) => {
-        if (xtermRef.current) {
-          xtermRef.current.write(text);
-        }
-        if (onLog) {
-          onLog(text);
-        }
-      });
-
-      socket.on('completed', (data: { status: string; exitCode: number }) => {
-        if (xtermRef.current) {
-          xtermRef.current.writeln(`\n\x1b[38;2;255;68;68mProcess completed with status: ${data.status}\x1b[0m`);
-        }
-      });
-
-      socket.on('disconnect', () => {
-        console.log('[Socket.io] Disconnected');
-      });
-
-      socket.on('connect_error', (err) => {
-        console.error('[Socket.io] Connection error:', err.message);
-      });
-
-      socketRef.current = socket;
-
-      return () => {
-        socket.emit('unsubscribe', programId);
-        socket.disconnect();
-      };
+      }
+    } else {
+      xtermRef.current.writeln('\x1b[38;2;0;255;136mℹ\x1b[0m Select a process to view logs');
     }
   }, [programId]);
 
-  // Display accumulated logs when switching
+  // Display accumulated logs
   useEffect(() => {
-    if (xtermRef.current && logs) {
+    if (xtermRef.current && logs && programId) {
       xtermRef.current.clear();
       xtermRef.current.write(logs);
     }
-  }, [logs]);
+  }, [logs, programId]);
 
   return (
     <div

@@ -28,7 +28,6 @@ export const ComplandTab: React.FC = () => {
   const [selectedProgram, setSelectedProgram] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [fileContent, setFileContent] = useState<string>('');
-  const [output, setOutput] = useState<string>('');
   const [isRunning, setIsRunning] = useState(false);
   const [showNewProgram, setShowNewProgram] = useState(false);
   const [newProgramName, setNewProgramName] = useState('');
@@ -62,7 +61,6 @@ export const ComplandTab: React.FC = () => {
   const runProgram = async () => {
     if (!selectedProgram) return;
     setIsRunning(true);
-    setOutput('');
     
     const program = programs.find(p => p.id === selectedProgram);
     if (program) {
@@ -77,10 +75,9 @@ export const ComplandTab: React.FC = () => {
     }
 
     try {
-      const res = await axios.post(`${API_BASE}/comp/programs/${selectedProgram}/run`);
-      setOutput(res.data.stdout || 'Program started');
+      await axios.post(`${API_BASE}/comp/programs/${selectedProgram}/run`);
     } catch (e: any) {
-      setOutput(`Error: ${e.response?.data?.error || e.message}`);
+      console.error('Run error:', e.response?.data?.error || e.message);
     } finally {
       setIsRunning(false);
     }
@@ -393,7 +390,6 @@ export const ComplandTab: React.FC = () => {
               <div className="flex-1 p-0 overflow-hidden" style={{ height: 'calc(100% - 32px)' }}>
                 <ComplandTerminal 
                   programId={selectedProcess}
-                  initialLogs={output || 'Click Run to execute'}
                   logs={selectedProcess ? processLogsRef.current[selectedProcess] : ''}
                 />
               </div>
@@ -456,13 +452,7 @@ export const ComplandTab: React.FC = () => {
                   <div className="flex-1 flex flex-col" style={{ minHeight: 0 }}>
                     <ComplandTerminal 
                       programId={selectedProcess}
-                      initialLogs={currentProcess.stdout || ''}
                       logs={selectedProcess ? processLogsRef.current[selectedProcess] : ''}
-                      onLog={(text) => {
-                        if (selectedProcess) {
-                          processLogsRef.current[selectedProcess] = (processLogsRef.current[selectedProcess] || '') + text;
-                        }
-                      }}
                     />
                   </div>
                 </div>

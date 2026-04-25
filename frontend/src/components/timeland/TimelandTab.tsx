@@ -1,179 +1,90 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, isSameMonth, isSameDay, addDays } from 'date-fns';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, CheckCircle2, Clock, Check, History, Bot, ListTodo, AlertCircle, Loader2 } from 'lucide-react';
-import { useWorkspace } from '../../hooks/useWorkspace.js';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Hash, Loader2, Bot, ListTodo, History } from 'lucide-react';
+import { useTimeland } from '../../hooks/useTimeland.js';
 import type { Task } from '../../types/index.js';
 
 export const TimelandTab: React.FC = () => {
-    const { tasks } = useWorkspace();
+    const { tasks, categories, selectedCategory, setSelectedCategory, isLoading } = useTimeland();
     const [currentDate, setCurrentDate] = useState(new Date());
-    const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+    const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     
+    const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
+    const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
+    const goToToday = () => setCurrentDate(new Date());
+
     // Group tasks by date
-    const tasksByDate = React.useMemo(() => {
+    const tasksByDate = useMemo(() => {
         const grouped: Record<string, Task[]> = {};
-        if (tasks) {
-            tasks.forEach(task => {
-                if (!grouped[task.date]) grouped[task.date] = [];
-                grouped[task.date].push(task);
-            });
-        }
+        tasks.forEach(task => {
+            if (!grouped[task.date]) grouped[task.date] = [];
+            grouped[task.date].push(task);
+        });
         return grouped;
     }, [tasks]);
 
-    const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
-    const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
-    const goToToday = () => {
-        setCurrentDate(new Date());
-        setSelectedDate(new Date());
-    };
+    // Calendar cells
+    const monthStart = startOfMonth(currentDate);
+    const monthEnd = endOfMonth(monthStart);
+    const startDate = startOfWeek(monthStart);
+    const endDate = endOfWeek(monthEnd);
 
-    const renderHeader = () => {
-        return (
-            <div className="flex items-center justify-between py-4 px-6 border-b border-border-medium bg-bg-tertiary">
-                <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-bg-elevated text-text-primary rounded-xl flex items-center justify-center">
-                        <CalendarIcon className="w-5 h-5" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-text-primary">
-                        {format(currentDate, 'MMMM yyyy')}
-                    </h2>
-                </div>
-                <div className="flex items-center gap-3 bg-bg-primary p-1 rounded-lg border border-border-medium">
-                    <button 
-                        onClick={prevMonth}
-                        className="p-2 hover:bg-bg-elevated rounded-md transition-colors text-text-primary"
-                    >
-                        <ChevronLeft className="w-5 h-5" />
-                    </button>
-                    <button 
-                        onClick={goToToday}
-                        className="px-4 py-1.5 bg-accent-primary text-sm font-bold text-text-inverse rounded-md shadow-sm hover:bg-accent-primary/80"
-                    >
-                        Today
-                    </button>
-                    <button 
-                        onClick={nextMonth}
-                        className="p-2 hover:bg-bg-elevated rounded-md transition-colors text-text-primary"
-                    >
-                        <ChevronRight className="w-5 h-5" />
-                    </button>
-                </div>
-            </div>
-        );
-    };
+    const calendarRows = [];
+    let days: React.ReactNode[] = [];
+    let day = startDate;
 
-    const renderDays = () => {
-        const dateFormat = "EEEE";
-        const days = [];
-        let startDate = startOfWeek(currentDate);
+    while (day <= endDate) {
         for (let i = 0; i < 7; i++) {
+            const cloneDay = day;
+            const isSelected = selectedDate && isSameDay(day, selectedDate);
+            const dateKey = format(day, 'yyyy-MM-dd');
+            const dayTasks = tasksByDate[dateKey] || [];
+            
             days.push(
-                <div className="text-center font-bold text-xs text-text-tertiary py-3 uppercase tracking-wider" key={i}>
-                    {format(addDays(startDate, i), dateFormat)}
-                </div>
-            );
-        }
-        return <div className="grid grid-cols-7 border-b border-border-medium bg-bg-tertiary">{days}</div>;
-    };
-
-    const renderCells = () => {
-        const monthStart = startOfMonth(currentDate);
-        const monthEnd = endOfMonth(monthStart);
-        const startDate = startOfWeek(monthStart);
-        const endDate = endOfWeek(monthEnd);
-
-        const rows = [];
-        let days = [];
-        let day = startDate;
-        let formattedDate = "";
-
-        while (day <= endDate) {
-            for (let i = 0; i < 7; i++) {
-                formattedDate = format(day, 'd');
-                const cloneDay = day;
-                const isSelected = selectedDate && isSameDay(day, selectedDate);
-                const dateKey = format(day, 'yyyy-MM-dd');
-                const dayTasks = tasksByDate[dateKey] || [];
-                const completedCount = dayTasks.filter(t => t.status === 'completed').length;
-                const pendingCount = dayTasks.filter(t => t.status === 'waiting').length;
-                const inProgressCount = dayTasks.filter(t => t.status === 'active').length;
-                const failedCount = dayTasks.filter(t => t.status === 'error').length;
-
-                days.push(
-                    <div
-                        className={`min-h-[120px] p-2 border-r border-b border-border-medium transition-colors cursor-pointer flex flex-col relative group ${
-                            !isSameMonth(day, monthStart)
-                                ? "bg-bg-primary text-text-tertiary"
-                                : isSelected ? "bg-accent-secondary text-text-primary" : "bg-bg-primary text-text-primary hover:bg-bg-tertiary"
-                        }`}
-                        key={day.toString()}
-                        onClick={() => setSelectedDate(cloneDay)}
-                    >
-                        <div className="flex justify-between items-start">
-                            <span className={`w-7 h-7 flex items-center justify-center rounded-full text-sm font-bold ${
-                                isSameDay(day, new Date()) 
-                                    ? "bg-accent-primary text-text-inverse shadow-md shadow-black/20" 
-                                    : isSelected ? "bg-transparent text-text-inverse" : "text-text-primary group-hover:text-text-inverse"
-                            }`}>
-                                {formattedDate}
-                            </span>
-                            
-                            {dayTasks.length > 0 && (
-                                <div className="flex gap-1">
-                                    {completedCount > 0 && <span className="w-2 h-2 rounded-full bg-accent-success" title={`${completedCount} completed`} />}
-                                    {inProgressCount > 0 && <span className="w-2 h-2 rounded-full bg-accent-info" title={`${inProgressCount} in progress`} />}
-                                    {pendingCount > 0 && <span className="w-2 h-2 rounded-full bg-accent-warning" title={`${pendingCount} pending`} />}
-                                    {failedCount > 0 && <span className="w-2 h-2 rounded-full bg-accent-danger" title={`${failedCount} failed`} />}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="mt-2 flex-1 flex flex-col gap-1 overflow-hidden">
-                            {dayTasks.slice(0, 3).map(task => (
-                                <div 
-                                    key={task.id} 
-                                    className={`text-[10px] px-1.5 py-1 rounded truncate border flex items-center gap-1 ${
-                                        task.status === 'completed' ? 'bg-accent-success/20 text-accent-success border-accent-success' :
-                                        task.status === 'active' ? 'bg-accent-info/20 text-accent-info border-accent-info' :
-                                        task.status === 'waiting' ? 'bg-accent-warning/20 text-accent-warning border-accent-warning' :
-                                        'bg-accent-danger/20 text-accent-danger border-accent-danger'
-                                    }`}
-                                >
-                                    {task.status === 'completed' && <CheckCircle2 className="w-3 h-3 shrink-0" />}
-                                    {task.status === 'active' && <Loader2 className="w-3 h-3 shrink-0 animate-spin" />}
-                                    {task.status === 'waiting' && <Clock className="w-3 h-3 shrink-0" />}
-                                    {task.status === 'error' && <AlertCircle className="w-3 h-3 shrink-0" />}
-                                    <span className="truncate">{task.time} - {task.title}</span>
-                                </div>
-                            ))}
-                            {dayTasks.length > 3 && (
-                                <div className="text-[10px] text-text-tertiary font-medium pl-1">
-                                    +{dayTasks.length - 3} more tasks
-                                </div>
-                            )}
-                        </div>
+                <div
+                    key={day.toString()}
+                    className={`min-h-[100px] p-2 border-r border-b border-border-medium transition-colors cursor-pointer flex flex-col ${
+                        !isSameMonth(day, monthStart)
+                            ? "bg-bg-primary/50 text-text-tertiary"
+                            : isSelected ? "bg-accent-secondary/20" : "bg-bg-primary hover:bg-bg-tertiary"
+                    }`}
+                    onClick={() => setSelectedDate(isSelected ? null : cloneDay)}
+                >
+                    <span className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${
+                        isSameDay(day, new Date()) 
+                            ? "bg-accent-primary text-text-inverse" 
+                            : "text-text-primary"
+                    }`}>
+                        {format(day, 'd')}
+                    </span>
+                    
+                    <div className="mt-1 flex-1 flex flex-col gap-0.5 overflow-hidden">
+                        {dayTasks.slice(0, 3).map(task => (
+                            <div key={task.id} className="text-[9px] px-1 py-0.5 rounded truncate bg-accent-primary/10 text-accent-primary border border-accent-primary/20">
+                                {task.time} {task.title}
+                            </div>
+                        ))}
+                        {dayTasks.length > 3 && (
+                            <span className="text-[9px] text-text-tertiary">+{dayTasks.length - 3}</span>
+                        )}
                     </div>
-                );
-                day = addDays(day, 1);
-            }
-            rows.push(
-                <div className="grid grid-cols-7 flex-1" key={day.toString()}>
-                    {days}
                 </div>
             );
-            days = [];
+            day = addDays(day, 1);
         }
-        return <div className="flex flex-col flex-1 bg-bg-primary border-l border-t border-border-medium">{rows}</div>;
-    };
+        calendarRows.push(
+            <div className="grid grid-cols-7" key={day.toString()}>{days}</div>
+        );
+        days = [];
+    }
 
-    const renderSidebar = () => {
+    // Detail panel
+    const renderDetailPanel = () => {
         const dateKey = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '';
         const dayTasks = tasksByDate[dateKey] || [];
-        const isToday = selectedDate && isSameDay(selectedDate, new Date());
 
         return (
-            <div className="w-96 bg-bg-primary border-l border-border-medium flex flex-col shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.3)] z-10 h-full overflow-hidden">
+            <div className="w-80 bg-bg-primary border-l border-border-medium flex flex-col h-full overflow-hidden">
                 <div className="p-6 border-b border-border-medium bg-bg-tertiary">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
@@ -190,7 +101,6 @@ export const TimelandTab: React.FC = () => {
                     <h4 className="text-xl font-bold text-text-primary">
                         {selectedDate ? format(selectedDate, 'EEEE, MMM d, yyyy') : 'Select a date'}
                     </h4>
-                    {isToday && <span className="inline-block mt-2 px-2.5 py-0.5 bg-accent-secondary text-accent-info text-xs font-bold rounded-full uppercase tracking-wider">Today</span>}
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-6 no-scrollbar">
@@ -215,7 +125,7 @@ export const TimelandTab: React.FC = () => {
                     ) : (
                         <div className="space-y-4">
                             {dayTasks.map(task => (
-                                <div key={task.id} className="bg-bg-tertiary border border-border-medium rounded-xl p-4 shadow-sm relative overflow-hidden group">
+                                <div key={task.id} className="bg-bg-tertiary border border-border-medium rounded-xl p-4 shadow-sm relative overflow-hidden">
                                     <div className={`absolute top-0 left-0 w-1 h-full ${
                                         task.status === 'completed' ? 'bg-accent-success' :
                                         task.status === 'active' ? 'bg-accent-info' :
@@ -231,18 +141,12 @@ export const TimelandTab: React.FC = () => {
                                         {task.description}
                                     </p>
                                     
-                                    <div className="flex items-center gap-1.5">
-                                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                                            task.status === 'completed' ? 'bg-accent-success/20 text-accent-success' :
-                                            task.status === 'active' ? 'bg-accent-info/20 text-accent-info' :
-                                            task.status === 'waiting' ? 'bg-accent-warning/20 text-accent-warning' : 'bg-accent-danger/20 text-accent-danger'
-                                        }`}>
-                                            {task.status === 'completed' && <Check className="w-3 h-3" />}
-                                            {task.status === 'active' && <Loader2 className="w-3 h-3 animate-spin" />}
-                                            {task.status === 'waiting' && <Clock className="w-3 h-3" />}
-                                            {task.status === 'error' && <AlertCircle className="w-3 h-3" />}
-                                            {task.status}
-                                        </span>
+                                    <div className="flex gap-1 flex-wrap">
+                                        {(task.categories || []).map(cat => (
+                                            <span key={cat} className="text-[10px] px-1.5 py-0.5 bg-bg-elevated rounded text-text-tertiary">
+                                                {cat}
+                                            </span>
+                                        ))}
                                     </div>
                                 </div>
                             ))}
@@ -253,18 +157,107 @@ export const TimelandTab: React.FC = () => {
         );
     };
 
+    if (isLoading) {
+        return (
+            <div className="flex-1 flex items-center justify-center bg-bg-primary">
+                <Loader2 className="w-8 h-8 animate-spin text-accent-primary" />
+            </div>
+        );
+    }
+
     return (
         <div className="flex-1 flex overflow-hidden bg-bg-primary">
-            <div className="flex-1 flex flex-col min-w-0">
-                {renderHeader()}
-                <div className="flex-1 flex flex-col p-6 overflow-y-auto no-scrollbar">
-                    <div className="bg-bg-primary rounded-xl shadow-sm border border-border-medium overflow-hidden flex flex-col min-h-[600px] h-full flex-1">
-                        {renderDays()}
-                        {renderCells()}
+            {/* LEFT SIDEBAR — Categories Explorer */}
+            <div className="bg-bg-secondary border-r border-border-medium flex flex-col h-full overflow-hidden"
+                 style={{ width: 'var(--theme-sidebar-width, 256px)' }}>
+                <div className="h-9 flex items-center px-4 border-b border-border-medium bg-bg-secondary">
+                    <span className="text-sm font-medium text-text-primary tracking-tight">Timeland</span>
+                </div>
+                
+                <div className="flex-1 overflow-y-auto p-3 space-y-6">
+                    <div className="space-y-1">
+                        <div 
+                            className={`w-full flex items-center px-3 py-1.5 rounded-lg cursor-pointer transition-colors ${
+                                selectedCategory === null ? 'bg-accent-primary/10 text-accent-primary' : 'text-text-secondary hover:bg-bg-elevated hover:text-text-primary'
+                            }`}
+                            onClick={() => setSelectedCategory(null)}
+                        >
+                            <div className={`p-1.5 rounded-lg mr-3 ${selectedCategory === null ? 'bg-accent-primary text-text-inverse' : 'bg-bg-elevated text-text-tertiary'}`}>
+                                <Hash className="w-4 h-4" />
+                            </div>
+                            <span className="text-sm font-bold flex-1">All Tasks</span>
+                            <span className="text-xs text-text-tertiary">{tasks.length}</span>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div className="px-3 mb-2 flex items-center justify-between">
+                            <span className="text-xs font-bold text-text-secondary uppercase tracking-wider">Categories</span>
+                        </div>
+                        
+                        <div className="space-y-1">
+                            {categories.map(cat => (
+                                <div 
+                                    key={cat.id}
+                                    className={`w-full flex items-center px-3 py-1.5 rounded-lg cursor-pointer transition-colors ${
+                                        selectedCategory === cat.id ? 'bg-accent-primary/10 text-accent-primary' : 'text-text-secondary hover:bg-bg-elevated hover:text-text-primary'
+                                    }`}
+                                    onClick={() => setSelectedCategory(cat.id)}
+                                >
+                                    <div className={`p-1.5 rounded-lg mr-3 ${selectedCategory === cat.id ? 'text-text-inverse' : 'text-text-tertiary'}`}
+                                         style={{ backgroundColor: selectedCategory === cat.id ? cat.color : undefined }}
+                                    >
+                                        <span className="w-4 h-4 rounded-full" style={{ backgroundColor: cat.color, display: 'inline-block' }} />
+                                    </div>
+                                    <span className="text-sm font-medium flex-1 truncate">{cat.name}</span>
+                                    <span className="text-xs text-text-tertiary">{cat.count}</span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
-            {renderSidebar()}
+
+            {/* MAIN CONTENT */}
+            <div className="flex-1 flex flex-col min-w-0">
+                <div className="h-9 flex items-center justify-between px-4 border-b border-border-medium bg-bg-secondary">
+                    <div className="flex items-center gap-3">
+                        <CalendarIcon className="w-4 h-4 text-text-primary" />
+                        <span className="text-sm font-bold text-text-primary">
+                            {format(currentDate, 'MMMM yyyy')}
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button onClick={prevMonth} className="p-1.5 hover:bg-bg-elevated rounded-md text-text-primary">
+                            <ChevronLeft className="w-4 h-4" />
+                        </button>
+                        <button onClick={goToToday} className="px-3 py-1 bg-accent-primary text-xs font-bold text-text-inverse rounded-md hover:bg-accent-primary/80">
+                            Today
+                        </button>
+                        <button onClick={nextMonth} className="p-1.5 hover:bg-bg-elevated rounded-md text-text-primary">
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+
+                <div className="flex-1 flex flex-col p-4 overflow-y-auto">
+                    <div className="bg-bg-primary rounded-lg border border-border-medium overflow-hidden flex flex-col flex-1">
+                        <div className="grid grid-cols-7 border-b border-border-medium bg-bg-secondary">
+                            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
+                                <div key={d} className="text-center font-bold text-xs text-text-tertiary py-2 uppercase">
+                                    {d}
+                                </div>
+                            ))}
+                        </div>
+                        <div className="flex flex-col flex-1">
+                            {calendarRows}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* RIGHT PANEL — Bot Operations */}
+            {renderDetailPanel()}
         </div>
     );
 };

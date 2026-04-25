@@ -2,9 +2,8 @@ import { Server as SocketIOServer } from 'socket.io';
 import { complandEventEmitter } from './executor.js';
 
 export function initializeComplandSocketIO(io: SocketIOServer) {
-  const complandNamespace = io.of('/compland');
-
-  complandNamespace.on('connection', (socket) => {
+  // Use root namespace, not /compland
+  io.on('connection', (socket) => {
     console.log('[Socket.io] Client connected:', socket.id);
 
     socket.on('subscribe', (programId: string) => {
@@ -24,16 +23,16 @@ export function initializeComplandSocketIO(io: SocketIOServer) {
 
   // Broadcast logs to specific program room
   complandEventEmitter.on('comp:log', (data: { programId: string; text: string }) => {
-    complandNamespace.to(`program:${data.programId}`).emit('log', data.text);
+    io.to(`program:${data.programId}`).emit('log', data.text);
   });
 
   complandEventEmitter.on('comp:completed', (data: any) => {
-    complandNamespace.to(`program:${data.programId}`).emit('completed', {
+    io.to(`program:${data.programId}`).emit('completed', {
       status: data.status,
       exitCode: data.exitCode,
     });
     // Also broadcast to all clients for process list updates
-    complandNamespace.emit('processUpdate', {
+    io.emit('processUpdate', {
       type: 'stopped',
       programId: data.programId,
       status: data.status,
@@ -42,7 +41,7 @@ export function initializeComplandSocketIO(io: SocketIOServer) {
 
   // Listen for process starts
   complandEventEmitter.on('comp:started', (data: { programId: string; programName: string }) => {
-    complandNamespace.emit('processUpdate', {
+    io.emit('processUpdate', {
       type: 'started',
       programId: data.programId,
       programName: data.programName,

@@ -96,6 +96,17 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdate, onEdit }) =>
             </a>
           )}
 
+          {/* Tags */}
+          {task.categories && task.categories.length > 0 && (
+            <div className="flex gap-1 flex-wrap">
+              {task.categories.map(cat => (
+                <span key={cat} className="text-[10px] px-1.5 py-0.5 bg-bg-elevated rounded text-text-tertiary">
+                  {cat}
+                </span>
+              ))}
+            </div>
+          )}
+
           {/* Assignee & Meta */}
           <div className="flex items-center justify-between text-xs text-text-tertiary">
             <div className="flex items-center gap-2">

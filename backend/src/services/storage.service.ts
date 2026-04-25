@@ -314,7 +314,7 @@ export class StorageService {
         return this.readDB().scenarios?.[id];
     }
 
-    createTask(title: string, status: Task['status'], time: string, date: string, description: string, scenarioId?: string, linkedDocumentId?: string, assignee?: string): Task {
+    createTask(title: string, status: Task['status'], time: string, date: string, description: string, scenarioId?: string, linkedDocumentId?: string, assignee?: string, programId?: string): Task {
         const db = this.readDB();
         const id = uuidv4();
         const now = new Date().toISOString();
@@ -322,6 +322,7 @@ export class StorageService {
         if (scenarioId) newTask.scenarioId = scenarioId;
         if (linkedDocumentId) newTask.linkedDocumentId = linkedDocumentId;
         if (assignee) newTask.assignee = assignee;
+        if (programId) newTask.programId = programId;
         db.tasks[id] = newTask;
         this.writeDB(db);
         return newTask;
@@ -458,6 +459,47 @@ export class StorageService {
             }
         }
         
+        this.writeDB(db);
+        return task;
+    }
+
+    // ─── Categories ───
+
+    getCategories(): { id: string; name: string; color: string; count: number }[] {
+        const db = this.readDB();
+        const tasks = Object.values(db.tasks) as any[];
+        const categoryMap = new Map<string, { count: number; color: string }>();
+        
+        for (const task of tasks) {
+            const cats: any[] = (task.categories || []);
+            for (const cat of cats) {
+                const catStr = String(cat);
+                const existing = categoryMap.get(catStr);
+                if (existing) {
+                    existing.count++;
+                } else {
+                    const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899'];
+                    const idx = catStr.split('').reduce((a: number, c: string) => a + c.charCodeAt(0), 0) % 8;
+                    categoryMap.set(catStr, { count: 1, color: colors[idx]! });
+                }
+            }
+        }
+        
+        return Array.from(categoryMap.entries()).map(([name, data]: [string, any]) => ({
+            id: name,
+            name,
+            color: data.color,
+            count: data.count
+        }));
+    }
+
+    updateTaskCategories(id: string, categories: string[]): Task {
+        const db = this.readDB();
+        const task = db.tasks[id];
+        if (!task) throw new Error('Task not found');
+        
+        task.categories = categories;
+        task.updatedAt = new Date().toISOString();
         this.writeDB(db);
         return task;
     }
