@@ -59,11 +59,23 @@ export const TimelandTab: React.FC = () => {
                     </span>
                     
                     <div className="mt-1 flex-1 flex flex-col gap-0.5 overflow-hidden">
-                        {dayTasks.slice(0, 3).map(task => (
-                            <div key={task.id} className="text-[9px] px-1 py-0.5 rounded truncate bg-accent-primary/10 text-accent-primary border border-accent-primary/20">
-                                {task.time} {task.title}
-                            </div>
-                        ))}
+                        {dayTasks.slice(0, 3).map(task => {
+                            // Color based on status
+                            const statusColors: Record<string, { bg: string; text: string; border: string }> = {
+                                'active': { bg: 'bg-accent-primary/10', text: 'text-accent-primary', border: 'border-accent-primary/20' },
+                                'completed': { bg: 'bg-emerald-500/10', text: 'text-emerald-500', border: 'border-emerald-500/20' },
+                                'waiting': { bg: 'bg-yellow-500/10', text: 'text-yellow-500', border: 'border-yellow-500/20' },
+                                'paused': { bg: 'bg-gray-500/10', text: 'text-gray-500', border: 'border-gray-500/20' },
+                                'error': { bg: 'bg-red-500/10', text: 'text-red-500', border: 'border-red-500/20' },
+                            };
+                            const colors = statusColors[task.status] || statusColors['waiting'];
+                            
+                            return (
+                                <div key={task.id} className={`text-[9px] px-1 py-0.5 rounded truncate ${colors.bg} ${colors.text} border ${colors.border}`}>
+                                    {task.time} {task.title}
+                                </div>
+                            );
+                        })}
                         {dayTasks.length > 3 && (
                             <span className="text-[9px] text-text-tertiary">+{dayTasks.length - 3}</span>
                         )}

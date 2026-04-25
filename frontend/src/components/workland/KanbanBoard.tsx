@@ -5,19 +5,18 @@ import { TaskCard } from './TaskCard.js';
 
 interface KanbanBoardProps {
   tasks: Task[];
-  onUpdate: () => void;
-  onEditTask?: (task: Task) => void;
+  onTaskClick?: (task: Task) => void;
 }
 
 const columns = [
-  { id: 'waiting', label: 'Backlog', icon: Clock, color: 'text-accent-warning', statuses: ['waiting', 'pending', 'inactive'] },
-  { id: 'active', label: 'Active', icon: Play, color: 'text-accent-info', statuses: ['active', 'in_progress'] },
-  { id: 'paused', label: 'Paused', icon: Pause, color: 'text-text-tertiary', statuses: ['paused'] },
-  { id: 'completed', label: 'Done', icon: CheckCircle, color: 'text-accent-success', statuses: ['completed'] },
-  { id: 'error', label: 'Error', icon: AlertCircle, color: 'text-accent-danger', statuses: ['error', 'failed'] },
+  { id: 'waiting', label: 'Backlog', icon: Clock, color: 'text-yellow-500', bgColor: 'bg-yellow-500/10', statuses: ['waiting', 'pending', 'inactive'] },
+  { id: 'active', label: 'Active', icon: Play, color: 'text-blue-500', bgColor: 'bg-blue-500/10', statuses: ['active', 'in_progress'] },
+  { id: 'paused', label: 'Paused', icon: Pause, color: 'text-gray-500', bgColor: 'bg-gray-500/10', statuses: ['paused'] },
+  { id: 'completed', label: 'Done', icon: CheckCircle, color: 'text-green-500', bgColor: 'bg-green-500/10', statuses: ['completed'] },
+  { id: 'error', label: 'Error', icon: AlertCircle, color: 'text-red-500', bgColor: 'bg-red-500/10', statuses: ['error', 'failed'] },
 ];
 
-export const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, onUpdate, onEditTask }) => {
+export const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, onTaskClick }) => {
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
 
   const handleDragOver = (e: React.DragEvent, columnId: string) => {
@@ -37,12 +36,11 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, onUpdate, onEdi
     if (!taskId) return;
     
     try {
-      await fetch(`/api/workland-tasks/${taskId}/status`, {
+      await fetch(`/api/tasks/${taskId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: columnId }),
       });
-      onUpdate();
     } catch (err) {
       console.error('Failed to update task status:', err);
     }
@@ -58,7 +56,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, onUpdate, onEdi
           return (
             <div
               key={column.id}
-              className={`w-72 flex flex-col rounded-lg border transition-colors ${
+              className={`w-80 flex flex-col rounded-xl border transition-colors ${
                 dragOverColumn === column.id 
                   ? 'border-accent-primary bg-accent-primary/5' 
                   : 'border-border-medium bg-bg-secondary'
@@ -68,30 +66,38 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, onUpdate, onEdi
               onDrop={(e) => handleDrop(e, column.id)}
             >
               {/* Column Header */}
-              <div className="flex items-center justify-between px-3 py-2 border-b border-border-medium">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-border-medium">
                 <div className="flex items-center gap-2">
-                  <Icon className={`w-4 h-4 ${column.color}`} />
-                  <span className="text-sm font-medium text-text-primary">{column.label}</span>
+                  <div className={`p-1.5 rounded-lg ${column.bgColor}`}>
+                    <Icon className={`w-4 h-4 ${column.color}`} />
+                  </div>
+                  <span className="text-sm font-semibold text-text-primary">{column.label}</span>
                 </div>
-                <span className="text-xs text-text-tertiary bg-bg-elevated px-2 py-0.5 rounded-full">
+                <span className="text-xs font-medium text-text-tertiary bg-bg-elevated px-2.5 py-1 rounded-full">
                   {columnTasks.length}
                 </span>
               </div>
 
               {/* Tasks */}
-              <div className="flex-1 overflow-y-auto p-2 space-y-2">
+              <div className="flex-1 overflow-y-auto p-3 space-y-2">
                 {columnTasks.map(task => (
-                  <TaskCard 
-                    key={task.id} 
-                    task={task} 
-                    onUpdate={onUpdate}
-                    onEdit={onEditTask}
-                  />
+                  <div 
+                    key={task.id}
+                    onClick={() => onTaskClick?.(task)}
+                    className="cursor-pointer"
+                  >
+                    <TaskCard 
+                      task={task} 
+                      onUpdate={() => {}}
+                      onEdit={() => onTaskClick?.(task)}
+                    />
+                  </div>
                 ))}
                 
                 {columnTasks.length === 0 && (
-                  <div className="text-center py-8 text-text-tertiary text-xs">
-                    <p>Drop tasks here</p>
+                  <div className="text-center py-8 text-text-tertiary text-xs border-2 border-dashed border-border-light rounded-lg">
+                    <p className="mb-1">📭 Пусто</p>
+                    <p>Перетащите задачу сюда</p>
                   </div>
                 )}
               </div>

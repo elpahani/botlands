@@ -37,11 +37,21 @@ export function useWorkspace() {
     useEffect(() => {
         fetchWorkspace();
 
-        const socket = io('http://localhost:3001', {
-            transports: ['websocket', 'polling']
-        });
+        const socket = io({ transports: ['websocket', 'polling'] });
         
         socket.on('workspace_updated', () => {
+            fetchWorkspace();
+        });
+        
+        socket.on('task:created', () => {
+            fetchWorkspace();
+        });
+        
+        socket.on('task:updated', () => {
+            fetchWorkspace();
+        });
+        
+        socket.on('task:deleted', () => {
             fetchWorkspace();
         });
 

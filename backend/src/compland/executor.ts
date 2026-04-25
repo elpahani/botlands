@@ -213,6 +213,26 @@ function runCode(
     runningProcesses.delete(program.id);
     saveLog(result, logPath, program);
     complandEventEmitter.emit(`comp:completed:${program.id}`, result);
+    
+    // Auto-mark task as completed
+    if (code === 0 || code === null) {
+      import('../services/storage.service.js').then(({ storageService }) => {
+        const tasks = storageService.listTasks();
+        const task = tasks.find((t: any) => t.programId === program.id && t.status === 'active');
+        if (task) {
+          console.log(`[AutoComplete] Marking task ${task.id} as completed`);
+          const updated = storageService.updateTask(task.id, { status: 'completed' });
+          if (updated) {
+            // Broadcast update
+            import('../services/websocket.service.js').then(({ wsService }) => {
+              wsService.broadcastTaskEvent('task:updated', updated);
+            });
+          }
+        }
+      }).catch(err => {
+        console.error('[AutoComplete] Failed:', err);
+      });
+    }
   });
 
   proc.on('error', (err) => {

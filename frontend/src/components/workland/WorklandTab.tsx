@@ -1,13 +1,15 @@
-import { useState, useEffect } from 'react';
-import { FolderKanban, Plus, Play, CheckCircle, AlertCircle, Clock, ListTodo } from 'lucide-react';
-import axios from 'axios';
+import { useState, useEffect, useCallback } from 'react';
+import { FolderKanban, Plus } from 'lucide-react';
+import { io } from 'socket.io-client';
 import type { Scenario, Task, Document } from '../../types/index.js';
 import { ScenarioSidebar } from './ScenarioSidebar.js';
 import { KanbanBoard } from './KanbanBoard.js';
 import { CreateScenarioModal } from './CreateScenarioModal.js';
 import { CreateTaskModal } from './CreateTaskModal.js';
 import { TaskEditorPanel } from './TaskEditorPanel.js';
+import axios from 'axios';
 
+const API_BASE = '/api';
 
 export const WorklandTab: React.FC = () => {
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
@@ -18,43 +20,66 @@ export const WorklandTab: React.FC = () => {
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState<string>('');
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    console.log('[Workland] loadData START');
+  // Load initial data
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      console.log('[Workland] Fetching scenarios...');
-      const scenariosRes = await axios.get('/api/scenarios');
-      console.log('[Workland] Scenarios received:', scenariosRes.data.length);
-      
-      console.log('[Workland] Fetching tasks...');
-      const tasksRes = await axios.get('/api/tasks');
-      console.log('[Workland] Tasks received:', tasksRes.data.length);
+      const [scenariosRes, tasksRes, docsRes] = await Promise.all([
+        axios.get(`${API_BASE}/scenarios`),
+        axios.get(`${API_BASE}/tasks`),
+        axios.get(`${API_BASE}/documents`).catch(() => ({ data: { documents: [] } }))
+      ]);
       
       setScenarios(scenariosRes.data);
       setTasks(tasksRes.data);
-      console.log('[Workland] State updated with', scenariosRes.data.length, 'scenarios');
-      
-      // Documents — опционально, не ломаем UI если упало
-      try {
-        console.log('[Workland] Fetching documents...');
-        const docsRes = await axios.get('/api/documents');
-        console.log('[Workland] Documents received:', docsRes.data?.length || 0);
-        setDocuments(docsRes.data?.documents || []);
-      } catch (docErr) {
-        console.warn('[Workland] Documents fetch failed:', docErr);
-      }
+      setDocuments(docsRes.data.documents || []);
+      setLastUpdate(new Date().toLocaleTimeString());
+      console.log('[Workland] Data loaded:', tasksRes.data.length, 'tasks');
     } catch (e) {
       console.error('[Workland] loadData ERROR:', e);
     } finally {
       setLoading(false);
-      console.log('[Workland] loadData END');
     }
-  };
+  }, []);
+
+  // Socket.io real-time updates
+  useEffect(() => {
+    loadData();
+
+    const socket = io({ transports: ['websocket', 'polling'] });
+    
+    socket.on('connect', () => {
+      console.log('[Workland] Socket connected');
+    });
+
+    socket.on('task:created', (task: Task) => {
+      console.log('[Workland] Task created:', task.title);
+      setTasks(prev => [...prev, task]);
+      setLastUpdate(new Date().toLocaleTimeString());
+    });
+
+    socket.on('task:updated', (task: Task) => {
+      console.log('[Workland] Task updated:', task.title, '→', task.status);
+      setTasks(prev => prev.map(t => t.id === task.id ? { ...t, ...task } : t));
+      setLastUpdate(new Date().toLocaleTimeString());
+    });
+
+    socket.on('task:deleted', (data: { id: string }) => {
+      console.log('[Workland] Task deleted:', data.id);
+      setTasks(prev => prev.filter(t => t.id !== data.id));
+    });
+
+    socket.on('workspace_updated', () => {
+      console.log('[Workland] Workspace updated');
+      loadData();
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [loadData]);
 
   const filteredTasks = selectedScenario 
     ? tasks.filter(t => t.scenarioId === selectedScenario)
@@ -88,6 +113,7 @@ export const WorklandTab: React.FC = () => {
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
         <div className="h-9 border-b border-border-medium bg-bg-secondary flex items-center px-6 shrink-0 justify-between">
           <div className="flex items-center gap-4">
             <span className="text-sm font-medium text-text-primary flex items-center gap-2">
@@ -98,61 +124,67 @@ export const WorklandTab: React.FC = () => {
               }
             </span>
             <div className="flex items-center gap-2 text-xs text-text-tertiary">
-              <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {taskCounts.waiting}</span>
-              <span className="flex items-center gap-1"><Play className="w-3 h-3" /> {taskCounts.active}</span>
-              <span className="flex items-center gap-1"><CheckCircle className="w-3 h-3" /> {taskCounts.completed}</span>
-              <span className="flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {taskCounts.error}</span>
+              <span className="px-2 py-0.5 rounded bg-bg-tertiary">
+                ⏳ {taskCounts.waiting}
+              </span>
+              <span className="px-2 py-0.5 rounded bg-accent-primary/20 text-accent-primary">
+                ▶ {taskCounts.active}
+              </span>
+              <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-500">
+                ✅ {taskCounts.completed}
+              </span>
+              <span className="px-2 py-0.5 rounded bg-red-500/20 text-red-500">
+                ❌ {taskCounts.error}
+              </span>
             </div>
           </div>
+          
           <div className="flex items-center gap-2">
-            <button 
-              onClick={() => {
-                if (!selectedScenario) {
-                  alert('Select a scenario first');
-                  return;
-                }
-                setShowTaskModal(true);
-              }}
-              className="flex items-center gap-1 px-3 py-1 text-xs bg-accent-primary text-text-inverse rounded-md hover:brightness-110"
+            <span className="text-[10px] text-text-tertiary">
+              🕐 {lastUpdate}
+            </span>
+            <button
+              onClick={() => setShowTaskModal(true)}
+              className="px-3 py-1.5 bg-accent-primary text-text-inverse text-sm font-medium rounded-lg hover:bg-accent-primary/90 transition-colors flex items-center gap-2"
             >
-              <ListTodo className="w-3 h-3" />
+              <Plus className="w-4 h-4" />
               New Task
-            </button>
-            <button 
-              onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-1 px-3 py-1 text-xs bg-bg-tertiary text-text-primary rounded-md hover:bg-bg-elevated border border-border-medium"
-            >
-              <Plus className="w-3 h-3" />
-              Scenario
             </button>
           </div>
         </div>
 
-        <KanbanBoard tasks={filteredTasks} onUpdate={loadData} onEditTask={setEditingTask} />
+        {/* Kanban Board */}
+        <div className="flex-1 overflow-auto p-4">
+          <KanbanBoard 
+            tasks={filteredTasks}
+            onTaskClick={(task) => setEditingTask(task)}
+          />
+        </div>
       </div>
 
-      {editingTask && (
-        <TaskEditorPanel
-          task={editingTask}
-          documents={documents}
-          onClose={() => setEditingTask(null)}
-          onUpdate={loadData}
-        />
-      )}
-
+      {/* Modals */}
       {showCreateModal && (
         <CreateScenarioModal 
           onClose={() => setShowCreateModal(false)}
-          onCreate={loadData}
+          onCreate={() => { loadData(); setShowCreateModal(false); }}
         />
       )}
 
-      {showTaskModal && selectedScenario && (
-        <CreateTaskModal
-          scenarioId={selectedScenario}
-          documents={documents}
+      {showTaskModal && (
+        <CreateTaskModal 
           onClose={() => setShowTaskModal(false)}
-          onCreate={loadData}
+          onCreate={() => { loadData(); setShowTaskModal(false); }}
+          documents={documents}
+          scenarioId={selectedScenario || ''}
+        />
+      )}
+
+      {editingTask && (
+        <TaskEditorPanel 
+          task={editingTask}
+          documents={documents}
+          onClose={() => setEditingTask(null)}
+          onUpdate={() => { loadData(); setEditingTask(null); }}
         />
       )}
     </div>

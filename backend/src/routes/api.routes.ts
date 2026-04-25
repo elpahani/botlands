@@ -35,6 +35,17 @@ router.get('/tasks', (req, res) => {
     res.json(storageService.listTasks());
 });
 
+router.get('/tasks/:id', (req, res) => {
+    try {
+        const tasks = storageService.listTasks();
+        const task = tasks.find(t => t.id === req.params.id);
+        if (!task) return res.status(404).json({ error: 'Task not found' });
+        res.json(task);
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 router.post('/tasks', (req, res) => {
     try {
         const { title, status, time, date, description, scenarioId, linkedDocumentId, assignee, categories } = req.body;
@@ -86,6 +97,7 @@ router.put('/tasks/:id', async (req, res) => {
         
         logAction('USER', 'UPDATE_TASK', { id: task.id, title: task.title });
         wsService.broadcastUpdate();
+        wsService.broadcastTaskEvent('task:updated', task);
         res.json(task);
     } catch (e: any) {
         res.status(500).json({ error: e.message });

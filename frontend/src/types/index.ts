@@ -28,14 +28,15 @@ export interface Task {
     title: string;
     description: string;
     status: TaskStatus;
-    date: string;        // для Timeland
-    time: string;        // для Timeland
+    date: string;
+    time: string;
     scenarioId: string;
     linkedDocumentId?: string;
     createdAt: string;
     updatedAt: string;
     assignee?: string;
-    categories?: string[]; // теги/категории для фильтрации
+    categories?: string[];
+    programId?: string;
 }
 
 export interface Category {

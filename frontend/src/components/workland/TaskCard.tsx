@@ -59,6 +59,23 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdate, onEdit }) =>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-text-primary truncate">{task.title}</p>
           <p className="text-xs text-text-tertiary mt-0.5 line-clamp-2">{task.description}</p>
+          <div className="flex items-center gap-2 mt-1">
+            {task.time && (
+              <span className="text-[10px] px-1.5 py-0.5 bg-accent-primary/20 text-accent-primary rounded font-mono">
+                🕐 {task.time}
+              </span>
+            )}
+            {task.date && (
+              <span className="text-[10px] px-1.5 py-0.5 bg-bg-elevated text-text-tertiary rounded">
+                📅 {task.date}
+              </span>
+            )}
+            {task.programId && (
+              <span className="text-[10px] px-1.5 py-0.5 bg-emerald-500/20 text-emerald-500 rounded">
+                ⚡ Auto
+              </span>
+            )}
+          </div>
         </div>
         <button
           onClick={() => setExpanded(!expanded)}
