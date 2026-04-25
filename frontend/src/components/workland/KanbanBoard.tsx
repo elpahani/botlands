@@ -48,7 +48,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, onTaskClick }) 
 
   return (
     <div className="h-full overflow-x-auto overflow-y-hidden">
-      <div className="flex gap-3 h-full min-w-0 px-2 py-2">
+      <div className="flex gap-3 h-full min-w-0 px-3 py-3">
         {columns.map(column => {
           const columnTasks = tasks.filter(t => column.statuses.includes(t.status));
           const Icon = column.icon;
