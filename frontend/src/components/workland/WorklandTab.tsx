@@ -44,7 +44,7 @@ export const WorklandTab: React.FC = () => {
     }
   }, []);
 
-  // Socket.io real-time updates
+  // Socket.io real-time updates + fallback polling
   useEffect(() => {
     loadData();
 
@@ -62,7 +62,11 @@ export const WorklandTab: React.FC = () => {
 
     socket.on('task:updated', (task: Task) => {
       console.log('[Workland] Task updated:', task.title, '→', task.status);
-      setTasks(prev => prev.map(t => t.id === task.id ? { ...t, ...task } : t));
+      setTasks(prev => {
+        const updated = prev.map(t => t.id === task.id ? { ...t, ...task } : t);
+        console.log('[Workland] Updated tasks count:', updated.length);
+        return updated;
+      });
       setLastUpdate(new Date().toLocaleTimeString());
     });
 
@@ -72,12 +76,24 @@ export const WorklandTab: React.FC = () => {
     });
 
     socket.on('workspace_updated', () => {
-      console.log('[Workland] Workspace updated');
+      console.log('[Workland] Workspace updated - reloading');
       loadData();
     });
 
+    // Fallback polling every 5 seconds
+    const pollInterval = setInterval(() => {
+      console.log('[Workland] Polling tasks...');
+      axios.get(`${API_BASE}/tasks`).then(res => {
+        setTasks(res.data);
+        setLastUpdate(new Date().toLocaleTimeString() + ' (poll)');
+      }).catch(err => {
+        console.error('[Workland] Polling error:', err);
+      });
+    }, 5000);
+
     return () => {
       socket.disconnect();
+      clearInterval(pollInterval);
     };
   }, [loadData]);
 
