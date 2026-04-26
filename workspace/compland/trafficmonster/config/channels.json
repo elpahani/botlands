@@ -1,0 +1,44 @@
+{
+  "channels": {
+    "@araspins": {
+      "name": "Arab Spins",
+      "language": "ar",
+      "country": "SA",
+      "token": "8400669200:AAHRKZ8iNg7CrvyqNVX_jNqYMg-GTmYeqms",
+      "schedule": "3_per_day",
+      "active": true
+    },
+    "@arabwinners": {
+      "name": "Arab Winners",
+      "language": "ar",
+      "country": "AE",
+      "token": "PLACEHOLDER",
+      "schedule": "3_per_day",
+      "active": false
+    },
+    "@saudicasino": {
+      "name": "Saudi Casino",
+      "language": "ar",
+      "country": "SA",
+      "token": "PLACEHOLDER",
+      "schedule": "2_per_day",
+      "active": false
+    },
+    "@uaecasino": {
+      "name": "UAE Casino",
+      "language": "ar",
+      "country": "AE",
+      "token": "PLACEHOLDER",
+      "schedule": "2_per_day",
+      "active": false
+    },
+    "@egyptcasino": {
+      "name": "Egypt Casino",
+      "language": "ar",
+      "country": "EG",
+      "token": "PLACEHOLDER",
+      "schedule": "2_per_day",
+      "active": false
+    }
+  }
+}

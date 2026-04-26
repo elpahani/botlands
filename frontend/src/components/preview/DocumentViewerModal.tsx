@@ -1,6 +1,8 @@
 import { Download, FileDown, Loader2, X, FileAudio } from 'lucide-react';
 import * as docx from 'docx-preview';
 import { useRef, useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { api } from '../../api.js';
 import type { Document, Revision } from '../../types/index.js';
 import { format } from 'date-fns';
@@ -125,6 +127,39 @@ export function DocumentViewerModal({
         }
 
         if (isText || isCode) {
+            const isMarkdown = ['.md', '.markdown'].includes(ext);
+            
+            if (isMarkdown) {
+                const [content, setContent] = useState<string>('');
+                const [loading, setLoading] = useState(true);
+                
+                useEffect(() => {
+                    fetch(api.getOriginalUrl(selectedDoc.id, selectedRevision.id))
+                        .then(res => res.text())
+                        .then(text => {
+                            setContent(text);
+                            setLoading(false);
+                        })
+                        .catch(() => setLoading(false));
+                }, []);
+                
+                return (
+                    <div className="w-full h-full max-w-5xl bg-bg-secondary shadow-xl rounded-lg border border-border-medium overflow-hidden">
+                        {loading ? (
+                            <div className="flex items-center justify-center h-full">
+                                <Loader2 className="w-8 h-8 animate-spin text-accent-primary" />
+                            </div>
+                        ) : (
+                            <div className="prose prose-invert max-w-none p-8 overflow-y-auto h-full">
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                    {content}
+                                </ReactMarkdown>
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+            
             return (
                 <div className="w-full h-full max-w-5xl bg-bg-secondary shadow-xl rounded-lg border border-border-medium overflow-hidden">
                     <iframe 

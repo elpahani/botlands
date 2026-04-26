@@ -170,7 +170,7 @@ export const WorklandTab: React.FC = () => {
         </div>
 
         {/* Kanban Board */}
-        <div className="flex-1 overflow-auto p-4">
+        <div className="flex-1 overflow-auto">
           <KanbanBoard 
             tasks={filteredTasks}
             onTaskClick={(task) => setEditingTask(task)}
