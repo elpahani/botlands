@@ -1,8 +1,0 @@
-{
-  "id": "node-default",
-  "name": "Node.js",
-  "type": "node",
-  "description": "Node.js 20 with npm",
-  "entrypoint": "node",
-  "setupCommands": ["npm install"]
-}

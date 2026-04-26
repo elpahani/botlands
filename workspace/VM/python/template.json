@@ -1,8 +1,0 @@
-{
-  "id": "python-default",
-  "name": "Python + UV",
-  "type": "python",
-  "description": "Python 3.12 with UV package manager",
-  "entrypoint": "python3",
-  "setupCommands": ["uv venv", "uv pip install -r requirements.txt"]
-}
