@@ -13,3 +13,4 @@ workspace/
 ocr-service/.venv312/
 ocr-service/.venv/
 vision-service/.venv/
+.git_backup_*

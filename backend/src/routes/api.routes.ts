@@ -3,6 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import { join } from 'path';
 import fs, { readFileSync } from 'fs';
+import sharp from 'sharp';
 import { storageService, INBOX_FOLDER_ID } from '../services/storage.service.js';
 import { wsService } from '../services/websocket.service.js';
 import { logAction } from '../logger.js';
@@ -259,6 +260,52 @@ router.get('/files/:id', (req, res) => {
         res.sendFile(filePath);
     } catch (e: any) {
         res.status(404).json({ error: e.message });
+    }
+});
+
+// Thumbnail generation endpoint
+router.get('/files/:id/thumbnail', async (req, res) => {
+    try {
+        const doc = storageService.getDocument(req.params.id);
+        if (!doc) return res.status(404).json({ error: 'Document not found' });
+        
+        const rev = doc.revisions.find(r => r.id === doc.currentRevisionId);
+        if (!rev) return res.status(404).json({ error: 'Revision not found' });
+        
+        let ext = rev.extension || path.extname(doc.title).toLowerCase() || '.html';
+        if (!ext.startsWith('.')) ext = '.' + ext;
+        
+        const isImage = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp'].includes(ext);
+        if (!isImage) {
+            return res.status(400).json({ error: 'Not an image file' });
+        }
+        
+        const filePath = storageService.getFilePath(req.params.id, doc.currentRevisionId, 'original');
+        
+        // Create thumbnails cache directory
+        const thumbsDir = join(process.cwd(), '.workspace', 'thumbnails');
+        if (!fs.existsSync(thumbsDir)) fs.mkdirSync(thumbsDir, { recursive: true });
+        
+        const thumbPath = join(thumbsDir, `${doc.id}-${doc.currentRevisionId}.jpg`);
+        
+        // Check if thumbnail already exists
+        if (fs.existsSync(thumbPath)) {
+            return res.sendFile(thumbPath);
+        }
+        
+        // Generate thumbnail
+        await sharp(filePath)
+            .resize(200, 200, { 
+                fit: 'cover',
+                position: 'center'
+            })
+            .jpeg({ quality: 80 })
+            .toFile(thumbPath);
+        
+        res.sendFile(thumbPath);
+    } catch (e: any) {
+        console.error('Thumbnail generation error:', e);
+        res.status(500).json({ error: e.message });
     }
 });
 

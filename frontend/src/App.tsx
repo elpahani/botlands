@@ -345,6 +345,7 @@ function App() {
 
                             {folderDocs.map(doc => {
                                 const ext = doc.revisions.find(r => r.id === doc.currentRevisionId)?.extension || doc.title.slice(doc.title.lastIndexOf('.')).toLowerCase() || '.html';
+                                const isImage = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp'].includes(ext);
                                 
                                 return (
                                     <div 
@@ -364,8 +365,21 @@ function App() {
                                         }}
                                         onDoubleClick={() => setSelectedDoc(doc)}
                                     >
-                                        <div className="flex flex-col items-center justify-center h-24 mb-3">
-                                            {getFileIcon(ext)}
+                                        <div className="flex flex-col items-center justify-center h-24 mb-3 overflow-hidden rounded-lg">
+                                            {isImage ? (
+                                                <img 
+                                                    src={api.getThumbnailUrl(doc.id)} 
+                                                    alt={doc.title}
+                                                    className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
+                                                    loading="lazy"
+                                                    onError={(e) => {
+                                                        // Fallback to original if thumbnail fails
+                                                        (e.target as HTMLImageElement).src = api.getOriginalUrl(doc.id, doc.currentRevisionId);
+                                                    }}
+                                                />
+                                            ) : (
+                                                getFileIcon(ext)
+                                            )}
                                         </div>
                                         <p className="text-sm font-bold text-text-primary text-center truncate leading-tight" title={doc.title}>{doc.title}</p>
                                         <p className="text-[10px] text-text-secondary text-center uppercase tracking-wider font-bold mt-1">{ext.replace('.', '')}</p>

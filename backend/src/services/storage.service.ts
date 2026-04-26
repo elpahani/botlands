@@ -181,7 +181,9 @@ export class StorageService {
     createDocument(title: string, content: Buffer | string, folderId: string = INBOX_FOLDER_ID, extension: string = '.html', isTempFilePath: boolean = false): Document {
         const db = this.readDB();
         
-        const ext = extension || path.extname(title).toLowerCase() || '.html';
+        let ext = extension || path.extname(title).toLowerCase() || '.html';
+        // Normalize: ensure extension starts with a dot
+        if (ext && !ext.startsWith('.')) ext = '.' + ext;
         const base = path.basename(title, ext);
         let uniqueTitle = title;
         let counter = 2;
@@ -237,7 +239,7 @@ export class StorageService {
         const revId = uuidv4();
         const docDir = path.join(FILES_DIR, id);
         
-        const ext = extension || doc.revisions.find(r => r.id === doc.currentRevisionId)?.extension || '.html';
+        const ext = (extension && !extension.startsWith('.') && extension.length > 0 ? '.' + extension : extension) || doc.revisions.find(r => r.id === doc.currentRevisionId)?.extension || '.html';
         const buf = typeof content === 'string' ? Buffer.from(content, 'utf-8') : content;
         fs.writeFileSync(path.join(docDir, `${revId}${ext}`), buf);
         

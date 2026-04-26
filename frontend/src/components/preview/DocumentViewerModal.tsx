@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm';
 import { api } from '../../api.js';
 import type { Document, Revision } from '../../types/index.js';
 import { format } from 'date-fns';
+import { TableViewer } from './TableViewer';
 
 export function DocxPreview({ url }: { url: string }) {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -59,7 +60,10 @@ export function DocumentViewerModal({
     getFileIcon: (ext: string, classes: string) => React.ReactNode;
 }) {
     const renderPreview = () => {
-        const ext = (selectedRevision.extension || selectedDoc.title.slice(selectedDoc.title.lastIndexOf('.')).toLowerCase() || '.html');
+        let ext = (selectedRevision.extension || selectedDoc.title.slice(selectedDoc.title.lastIndexOf('.')).toLowerCase() || '.html');
+        // Normalize extension to always have a leading dot
+        if (ext && !ext.startsWith('.')) ext = '.' + ext;
+        const isTable = ['.csv', '.xlsx', '.xls'].includes(ext);
         const isImage = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp'].includes(ext);
         const isVideo = ['.mp4', '.webm', '.ogg', '.mov'].includes(ext);
         const isAudio = ['.mp3', '.wav', '.flac', '.m4a'].includes(ext);
@@ -126,6 +130,18 @@ export function DocumentViewerModal({
             );
         }
 
+        if (isTable) {
+            return (
+                <div className="w-full h-full max-w-7xl bg-bg-secondary shadow-xl rounded-lg border border-border-medium overflow-hidden">
+                    <TableViewer 
+                        docId={selectedDoc.id} 
+                        revId={selectedRevision.id} 
+                        fileType={ext === '.csv' ? 'csv' : 'xlsx'}
+                    />
+                </div>
+            );
+        }
+        
         if (isText || isCode) {
             const isMarkdown = ['.md', '.markdown'].includes(ext);
             

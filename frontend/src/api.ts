@@ -36,6 +36,7 @@ export const api = {
     },
     getHtmlUrl: (id: string, revId: string) => `${API_BASE}/documents/${id}/revisions/${revId}/html`,
     getOriginalUrl: (id: string, revId: string) => `${API_BASE}/documents/${id}/revisions/${revId}/content`,
+    getThumbnailUrl: (id: string) => `${API_BASE}/files/${id}/thumbnail`,
     getPreviewUrl: (id: string, revId: string) => `${API_BASE}/documents/${id}/revisions/${revId}/preview`,
     getPdfUrl: (id: string, revId: string) => `${API_BASE}/documents/${id}/revisions/${revId}/pdf`,
     uploadFile: async (file: File, folderId: string = 'inbox', path: string = ''): Promise<Document> => {
